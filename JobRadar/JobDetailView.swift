@@ -94,6 +94,12 @@ struct JobDetailView: View {
         if s.liveStatus == "closed" { chips.append((t("The posting may be closed"), .red)) }
         if let f = d.extra.filteredReason, !f.isEmpty { chips.append((t("Filtered out: %@", f), .red)) }
         chips.append((t("Quick score %@", Int(s.prescore)), .secondary))
+        if let semantic = d.extra.match?.semantic {
+            chips.append((t("Semantic score %@", Int((semantic * 100).rounded())), .secondary))
+        }
+        if let label = d.extra.label, label != "skip" {
+            chips.append((t("Your verdict: %@", Verdict.title(label)), Verdict.color(label)))
+        }
         if !s.sources.isEmpty { chips.append((s.sources.joined(separator: ", "), .secondary)) }
         if let p = s.postedAt, !p.isEmpty { chips.append((t("Posted %@", Dates.short(p)), .secondary)) }
         // the same word can come from two places (remote work and a note of the posting): show it once
@@ -111,6 +117,21 @@ struct JobDetailView: View {
                 Label(d.summary.statusLabel, systemImage: "flag")
             }
             .fixedSize()
+            if model.summary?.features?.contains("labels") == true {
+                Menu {
+                    Button(Verdict.title("good")) { Task { await model.setLabel(d.id, "good") } }
+                    Button(Verdict.title("maybe")) { Task { await model.setLabel(d.id, "maybe") } }
+                    Button(Verdict.title("bad")) { Task { await model.setLabel(d.id, "bad") } }
+                    if d.extra.label != nil {
+                        Divider()
+                        Button(t("Take my verdict back")) { Task { await model.setLabel(d.id, "") } }
+                    }
+                } label: {
+                    Label(t("My verdict"), systemImage: "hand.thumbsup")
+                }
+                .fixedSize()
+                .help(t("Say whether this job fits you. JobRadar measures its rankings and rules against your verdicts."))
+            }
             Button {
                 Task { await model.evaluate(d.id) }
             } label: {

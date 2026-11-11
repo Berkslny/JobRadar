@@ -96,6 +96,11 @@ final class AppModel {
     /// The job board connectors are being added in the background.
     var jobBoardsInstalling = false
     var jobBoardsError = ""
+    /// The runtime of the built-in embedding model (smart matching) is being added.
+    var matchingInstalling = false
+    var matchingError = ""
+    /// Measurements on the user's own verdicts; nil until loaded or when the engine has none.
+    var bench: BenchReport? = nil
     /// Sheet for adding a posting by its link; the link may come from the browser button.
     /// The app shows made-up sample data from its own folder; the user's data is not touched.
     var sampleData = false
@@ -212,7 +217,10 @@ final class AppModel {
             localState = .running
             await loadSetup(offerOnboarding: !sampleData)
             await refreshAll()
-            Task { await self.installJobBoards() }
+            Task {
+                await self.installJobBoards()
+                await self.installMatchingIfNeeded()
+            }
             await autoScanIfDue()
         } catch {
             localState = .failed(error.localizedDescription)
@@ -348,6 +356,35 @@ final class AppModel {
         jobBoardsError = EngineMarker.read().jobBoardsError
     }
 
+    /// Adds the runtime of the built-in embedding model when smart matching is on and the engine misses it
+    /// (first use, or after the engine was installed again).
+    func installMatchingIfNeeded(force: Bool = false) async {
+        guard config.mode == .local, !sampleData, connectionReady, !matchingInstalling else { return }
+        guard let state = try? await api.matching(), state.enabled, state.provider == "fastembed",
+              !state.installed else {
+            matchingError = ""
+            return
+        }
+        var marker = EngineMarker.read()
+        if !force && !marker.matchingError.isEmpty {
+            // it failed before: show why and wait for the user to try again
+            matchingError = marker.matchingError
+            return
+        }
+        matchingInstalling = true
+        defer { matchingInstalling = false }
+        // one installation at a time in the engine's Python environment
+        while jobBoardsInstalling {
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        // the engine says the package is missing, whatever was noted earlier
+        marker.matching = false
+        marker.matchingError = ""
+        marker.write()
+        try? await EngineRuntime.ensureInstalled(includeJobBoards: false, includeMatching: true) { _ in }
+        matchingError = EngineMarker.read().matchingError
+    }
+
     /// Starts today's due full scan once (local mode, automatic scans on, setup complete).
     func autoScanIfDue() async {
         guard !sampleData else { return }
@@ -438,6 +475,7 @@ final class AppModel {
         case .stats:
             await loadStats()
             await loadGaps()
+            await loadBench()
         case .replies:
             await loadMailSignals()
         case .profile, .search:
@@ -519,6 +557,22 @@ final class AppModel {
     func loadGaps() async {
         do {
             gaps = try await api.gaps()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Measurements on the user's own verdicts. An older engine has none: the section stays hidden then.
+    func loadBench() async {
+        guard connectionReady else { return }
+        bench = try? await api.bench()
+    }
+
+    /// Stores the user's verdict on a posting ("good", "maybe", "bad", "skip"; "" takes it back).
+    func setLabel(_ jobID: String, _ label: String) async {
+        do {
+            try await api.setLabel(jobID, label: label)
+            if selectedJobID == jobID { await loadDetail(jobID) }
         } catch {
             errorMessage = error.localizedDescription
         }

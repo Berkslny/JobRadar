@@ -113,6 +113,9 @@ struct StatsView: View {
             } else {
                 ProgressView().frame(maxWidth: .infinity)
             }
+            if let report = model.bench {
+                MeasurementSection(report: report)
+            }
             if let g = model.gaps {
                 GapsSection(gaps: g)
             }
@@ -121,6 +124,7 @@ struct StatsView: View {
         .task {
             await model.loadStats()
             await model.loadGaps()
+            await model.loadBench()
         }
         .toolbar {
             Button {
@@ -128,6 +132,7 @@ struct StatsView: View {
                     await model.refreshSummary()
                     await model.loadStats()
                     await model.loadGaps()
+                    await model.loadBench()
                 }
             } label: {
                 Label(t("Refresh"), systemImage: "arrow.clockwise")
