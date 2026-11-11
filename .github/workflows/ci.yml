@@ -1,5 +1,5 @@
-# Checks every push: the engine's tests on Linux and a build of the Mac app.
-# Nothing is signed, published or deployed here.
+# Checks every push: the engine's tests on Linux, a build of the Mac app, and smart matching with the real
+# embedding model on Linux and on an Apple Silicon Mac. Nothing is signed, published or deployed here.
 name: CI
 
 on:
@@ -30,6 +30,8 @@ jobs:
         run: ../.venv/bin/python -m pytest
       - name: Check the app's Turkish texts
         run: python3 tools/l10n.py check
+      - name: Check that the engine package in the app matches the sources
+        run: python3 tools/check_wheel.py
 
   app:
     name: Build the Mac app
@@ -50,3 +52,26 @@ jobs:
           grep -E "(error|fatal error):" "$RUNNER_TEMP/build.log" | sort -u | head -n 60 | while IFS= read -r line; do
             echo "::error::${line}"
           done
+
+  matching:
+    name: Smart matching with the real model (${{ matrix.os }})
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, xcode-27]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the engine the way the app does (uv, Python 3.12, the package inside the app)
+        run: |
+          pipx install uv
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" JobRadar/jobradar-*.whl
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" "fastembed>=0.9" pytest
+      - name: Download the built-in model, then embed and rank sample postings
+        working-directory: engine
+        env:
+          JOBRADAR_TEST_REAL_MODEL: "1"
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -m pytest tests/test_matching.py -k "real_model or installed_library" -s -p no:cacheprovider
