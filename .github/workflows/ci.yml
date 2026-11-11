@@ -1,0 +1,52 @@
+# Checks every push: the engine's tests on Linux and a build of the Mac app.
+# Nothing is signed, published or deployed here.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: Engine tests
+    # a pull request from a branch of this repository is already covered by its pushes
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the engine
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet -e "engine[dev]"
+      - name: Run the tests
+        working-directory: engine
+        run: ../.venv/bin/python -m pytest
+      - name: Check the app's Turkish texts
+        run: python3 tools/l10n.py check
+
+  app:
+    name: Build the Mac app
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v5
+      - name: Show the Xcode version
+        run: xcodebuild -version
+      - name: Build (no signing)
+        run: |
+          set -o pipefail
+          xcodebuild -project JobRadar.xcodeproj -target JobRadar -configuration Debug \
+            SYMROOT="$RUNNER_TEMP/build" OBJROOT="$RUNNER_TEMP/obj" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/build.log" | tail -n 40
+      - name: List the compiler errors
+        if: failure()
+        run: |
+          grep -E "(error|fatal error):" "$RUNNER_TEMP/build.log" | sort -u | head -n 60 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
