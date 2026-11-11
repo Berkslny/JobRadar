@@ -111,6 +111,25 @@ def mail_sync_step(conn, cfg: AppConfig, log=log) -> None:
         log(f"→ E-posta: {len(res.new)} yeni yanıt, {res.pending} tanesi onay bekliyor")
 
 
+def matching_step(conn, cfg: AppConfig, profile: Profile, log=log, progress=None) -> None:
+    """Semantic scores and promotions for what the scan brought. Never breaks the cycle."""
+    if not cfg.matching.enabled:
+        return
+    from jobradar.scoring import match
+    from jobradar.scoring.embed import EmbedError
+
+    try:
+        match.run_matching(conn, cfg, profile, log=log, progress=progress)
+    except EmbedError as exc:
+        conn.rollback()
+        log(f"[yellow]Eşleştirme atlandı: {exc}[/yellow]")
+        db.set_meta(conn, match.META_ERROR, str(exc)[:300])
+    except Exception as exc:  # noqa: BLE001
+        conn.rollback()
+        log(f"[yellow]Eşleştirme hatası: {type(exc).__name__}: {exc}[/yellow]")
+        db.set_meta(conn, match.META_ERROR, f"{type(exc).__name__}: {exc}"[:300])
+
+
 def instant_alert_step(conn, cfg: AppConfig, german_level: str, log=log) -> None:
     from jobradar.mailer import MailError, send_instant_alerts
 
@@ -154,6 +173,7 @@ def _run_cycle_locked(cfg: AppConfig, *, log=log, use_llm: bool = True, notify: 
             log(f"→ gelen kutusu: {n} yeni ilan")
             progress.new_jobs += n
         enrich_pending(conn, cfg, profile, client=client, log=log, progress=progress.on_enrich)
+        matching_step(conn, cfg, profile, log, progress.on_match)
         llm = None
         if use_llm:
             try:
@@ -275,6 +295,14 @@ def doctor(config: Optional[Path] = ConfigOpt,
         t.add_row("JobSpy", "kurulu")
     else:
         t.add_row("JobSpy", "[yellow]kurulu değil[/yellow]: pip install 'jobradar[jobspy]'")
+    if cfg.matching.enabled:
+        from jobradar.scoring import embed
+
+        missing = cfg.matching.provider == "fastembed" and not embed.fastembed_installed()
+        t.add_row("Akıllı eşleştirme", f"açık: {embed.model_key(cfg)}"
+                  + (" [yellow](paket yok: pip install 'jobradar[match]')[/yellow]" if missing else ""))
+    else:
+        t.add_row("Akıllı eşleştirme", "kapalı (matching.enabled: false)")
     t.add_row("PDF", ("RenderCV + " if shutil.which("rendercv") else "") + (f"Chrome ({find_chrome(cfg.tailor.chrome_path)})"
               if find_chrome(cfg.tailor.chrome_path) else "[yellow]Chrome/Edge bulunamadı: sadece HTML[/yellow]"))
     from jobradar.mailer import smtp_settings
@@ -420,6 +448,130 @@ def evaluate(config: Optional[Path] = ConfigOpt, limit: int = typer.Option(None,
         console.print(f"{len(res)} ilan değerlendirildi")
     finally:
         conn.close()
+
+
+@app.command("match")
+def match_cmd(config: Optional[Path] = ConfigOpt,
+              status_only: bool = typer.Option(False, "--status", help="Çalıştırma, sadece durumu göster"),
+              minutes: int = typer.Option(30, help="En fazla kaç dakika sürsün")) -> None:
+    """Akıllı eşleştirme: ilanları hedef alanların ve profilinle anlamca karşılaştır."""
+    from jobradar.scoring import embed, match
+
+    cfg, prof = _load(config)
+    conn = db.connect(cfg.db_path)
+    try:
+        if not status_only:
+            if not cfg.matching.enabled:
+                console.print("[red]Akıllı eşleştirme kapalı. jobradar.yaml içinde matching.enabled: true yap.[/red]")
+                raise typer.Exit(1)
+            try:
+                rep = match.run_matching(conn, cfg, prof, log=log, max_seconds=max(1, minutes) * 60)
+            except embed.EmbedError as exc:
+                console.print(f"[red]{exc}[/red]")
+                raise typer.Exit(1)
+            bar = f"{rep.threshold:.2f} ({rep.reference} ilan üzerinden)" if rep.threshold is not None else \
+                f"henüz yok ({rep.reference}/{match.MIN_REFERENCE} anahtar kelime eşleşmesi)"
+            console.print(f"[green]✓[/green] {rep.embedded} ilan işlendi, {rep.scored} puanlandı, {rep.promoted} öne "
+                          f"çıkarıldı, {rep.demoted} geri alındı · eşik {bar} · {rep.seconds:g} sn"
+                          + (f" · {rep.waiting} ilan sonraki çalıştırmaya kaldı" if rep.waiting else ""))
+            if rep.note:
+                console.print(rep.note)
+        state = match.status(conn, cfg)
+    finally:
+        conn.close()
+    console.print(f"Model: {embed.model_key(cfg)} · puanlı ilan: {state['scored']} · öne çıkarılan: {state['promoted']}"
+                  + (f"\n[yellow]Son hata: {state['last_error']}[/yellow]" if state["last_error"] else ""))
+
+
+@app.command("label")
+def label_cmd(job_id: str, verdict: str = typer.Argument(..., help="good | maybe | bad | skip | clear"),
+              note: str = typer.Option("", help="Not"), config: Optional[Path] = ConfigOpt) -> None:
+    """Bir ilan hakkındaki kendi kararını kaydet (ölçümlerin referansı): uygun, belki, uygun değil."""
+    from jobradar.scoring import bench
+
+    cfg, _ = _load(config)
+    conn = db.connect(cfg.db_path)
+    try:
+        job = _job(conn, job_id)
+        try:
+            name = bench.set_label(conn, job["id"], "" if verdict == "clear" else verdict, note)
+        except ValueError as exc:
+            console.print(f"[red]{exc}[/red] (good | maybe | bad | skip | clear)")
+            raise typer.Exit(1)
+    finally:
+        conn.close()
+    console.print(f"{clean_title(job['title'])}: {name or 'etiket silindi'}")
+
+
+def _pct(value) -> str:
+    return "–" if value is None else f"%{value * 100:.0f}"
+
+
+@app.command("bench")
+def bench_cmd(config: Optional[Path] = ConfigOpt, days: int = typer.Option(30, help="Model kullanımı: son kaç gün"),
+              explicit: bool = typer.Option(False, "--explicit", help="Sadece elle verdiğin etiketleri kullan"),
+              as_json: bool = typer.Option(False, "--json", help="Ham sonucu JSON olarak yaz")) -> None:
+    """Ölçüm: sıralamalar istediğin ilanları öne alıyor mu, kurallar neleri kaçırıyor, AI ne kadar isabetli?"""
+    import json
+
+    from jobradar.scoring import bench
+
+    cfg, prof = _load(config)
+    conn = db.connect(cfg.db_path)
+    try:
+        data = bench.report(conn, cfg, prof, days=days, explicit_only=explicit)
+    finally:
+        conn.close()
+    if as_json:
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return
+    lb = data["labels"]
+    console.print(f"[bold]Kararların[/bold]: {lb['total']} ilan ({lb['explicit']} etiket, {lb['from_status']} durumdan) · "
+                  f"uygun {lb['good']}, belki {lb['maybe']}, uygun değil {lb['bad']}")
+    if not lb["enough"]:
+        console.print(f"[yellow]Sayılar henüz oynak: en az {lb['needed']} karar ve her iki türden en az "
+                      f"{bench.MIN_PER_CLASS} ilan gerekir.[/yellow]")
+    rk = data["rankings"]
+    t = Table(title=f"Sıralamalar ({rk['n']} ilan üzerinde)")
+    for col in ("sıralama", "ilan", "ilk 10'da isabet", f"ilk {max(1, cfg.scoring.llm_max_per_run)}'de isabet",
+                "NDCG@10", "AUC"):
+        t.add_column(col)
+    for row in rk["rows"]:
+        t.add_row(row["name"], str(row["n"]), _pct(row["precision_at_10"]), _pct(row["budget_hit_rate"]),
+                  "–" if row["ndcg_at_10"] is None else f"{row['ndcg_at_10']:.2f}",
+                  "–" if row["auc"] is None else f"{row['auc']:.2f}")
+    console.print(t)
+    names = {"evaluated": "AI değerlendirdi", "queue": "AI sırasında", "low_score": "ön puanı düşük",
+             "track_filtered": "hedef alan filtresine takıldı"}
+    g = Table(title="Kapı: AI modeline giden ve gitmeyen ilanlar")
+    for col in ("grup", "ilan", "etiketlediğin", "uygun bulduğun", "oran", "tahmini uygun"):
+        g.add_column(col)
+    for row in data["gate"]["groups"]:
+        g.add_row(names[row["id"]], str(row["postings"]), str(row["judged"]), str(row["wanted"]), _pct(row["rate"]),
+                  "–" if row["estimated_wanted"] is None else f"~{row['estimated_wanted']:g}")
+    console.print(g)
+    gate = data["gate"]
+    if gate["estimated_missed"] is not None:
+        console.print(f"AI modeline hiç gitmeyen ama uygun bulacağın tahmini ilan: ~{gate['estimated_missed']:g}"
+                      + (f" · kapının yakaladığı pay: {_pct(gate['estimated_recall'])}"
+                         if gate["estimated_recall"] is not None else ""))
+    j = data["judge"]
+    if j["n"]:
+        console.print(f"[bold]AI ile uyum[/bold] ({j['n']} ilan): aynı karar {_pct(j['agreement'])}"
+                      + (f" · kappa {j['kappa']:.2f} (0.6 ve üstü iyi)" if j["kappa"] is not None else "")
+                      + f" · değerlendirilenlerin {_pct(j['hit_rate'])} kadarı uygun"
+                      + f" · sadece AI evet: {j['only_ai_yes']}, sadece sen evet: {j['only_you_yes']}")
+    u = data["usage"]
+    if u["calls"]:
+        cost = f" · API karşılığı ${u['cost_usd']:.2f}" if u["cost_usd"] is not None else ""
+        console.print(f"[bold]Model kullanımı[/bold] (son {u['days']} gün): {u['calls']} çağrı, {u['failed']} hata, "
+                      f"{u['input_tokens']:,} giriş + {u['output_tokens']:,} çıkış token{cost}".replace(",", "."))
+        for row in u["by_purpose"]:
+            avg = "" if row["avg_input_tokens"] is None else \
+                f"ortalama {row['avg_input_tokens']} giriş / {row['avg_output_tokens']} çıkış token, "
+            console.print(f"  {row['purpose']}: {row['calls']} çağrı, {avg}{row['avg_seconds']:g} sn")
+    else:
+        console.print("Model kullanımı: henüz kayıt yok (kayıt bu sürümle başlar).")
 
 
 @app.command("api-token")

@@ -20,8 +20,9 @@ KEY = "cycle_progress"
 STAGES: dict[str, tuple[str, float, float]] = {
     "queued": ("Başlatılıyor", 0.0, 0.0),
     "scan": ("İlanlar taranıyor", 0.0, 0.45),
-    "enrich": ("Açıklamalar tamamlanıyor", 0.45, 0.6),
-    "evaluate": ("LLM değerlendirmesi", 0.6, 0.95),
+    "enrich": ("Açıklamalar tamamlanıyor", 0.45, 0.58),
+    "match": ("İlanlar eşleştiriliyor", 0.58, 0.64),
+    "evaluate": ("LLM değerlendirmesi", 0.64, 0.95),
     "mail": ("E-posta yanıtları okunuyor", 0.95, 0.98),
     "notify": ("Bildirimler gönderiliyor", 0.98, 1.0),
 }
@@ -109,6 +110,11 @@ class CycleProgress:
         if label and i < n:
             detail += f" · {label}"
         self.stage("enrich", detail, i, n, throttle=0 < i < n)
+
+    def on_match(self, i: int, n: int, label: str = "") -> None:
+        """Semantic matching: posting `i` of `n` embedded (or `label` while the model is being prepared)."""
+        detail = label or (t("{i}/{n} ilan", i=min(i + 1, n), n=n) if n else "")
+        self.stage("match", detail, i, n, throttle=0 < i < n)
 
     def on_evaluate(self, i: int, n: int, label: str = "") -> None:
         detail = t("{i}/{n} ilan", i=min(i + 1, n), n=n) if n else t("değerlendirilecek ilan yok")

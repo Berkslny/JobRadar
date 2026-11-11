@@ -27,8 +27,9 @@ dependencies = [
 [project.optional-dependencies]
 jobspy = ["python-jobspy>=1.4"]
 pdf = ["rendercv[full]>=2.0"]
+match = ["fastembed>=0.9"]
 dev = ["pytest>=8"]
-all = ["python-jobspy>=1.4", "rendercv[full]>=2.0", "pytest>=8"]
+all = ["python-jobspy>=1.4", "rendercv[full]>=2.0", "fastembed>=0.9", "pytest>=8"]
 
 [project.scripts]
 jobradar = "jobradar.cli:main"

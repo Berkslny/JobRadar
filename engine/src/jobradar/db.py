@@ -148,6 +148,63 @@ CREATE TABLE IF NOT EXISTS mail_signals (
 );
 CREATE INDEX IF NOT EXISTS idx_mail_signals_state ON mail_signals(state);
 CREATE INDEX IF NOT EXISTS idx_mail_signals_job ON mail_signals(job_id);
+
+-- Your own verdict on a posting (2 = fits, 1 = maybe, 0 = does not fit): the reference the measurements use.
+CREATE TABLE IF NOT EXISTS labels (
+  job_id TEXT PRIMARY KEY,
+  label INTEGER NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+-- One row per call to the AI model: size, time and what it was for. Never the prompt or the answer.
+CREATE TABLE IF NOT EXISTS llm_calls (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts TEXT NOT NULL,
+  provider TEXT NOT NULL DEFAULT '',
+  model TEXT NOT NULL DEFAULT '',
+  tier TEXT NOT NULL DEFAULT '',
+  purpose TEXT NOT NULL DEFAULT '',
+  job_id TEXT,
+  ok INTEGER NOT NULL DEFAULT 1,
+  error TEXT NOT NULL DEFAULT '',
+  seconds REAL NOT NULL DEFAULT 0,
+  prompt_chars INTEGER NOT NULL DEFAULT 0,
+  output_chars INTEGER NOT NULL DEFAULT 0,
+  input_tokens INTEGER,
+  output_tokens INTEGER,
+  cost_usd REAL
+);
+CREATE INDEX IF NOT EXISTS idx_llm_calls_ts ON llm_calls(ts);
+
+-- Embedding vectors (float32, little endian, length 1) of postings ('job') and of tracks and profile ('query').
+CREATE TABLE IF NOT EXISTS embeddings (
+  kind TEXT NOT NULL,
+  ref TEXT NOT NULL,
+  model TEXT NOT NULL,
+  text_hash TEXT NOT NULL,
+  dim INTEGER NOT NULL,
+  n INTEGER NOT NULL,
+  vectors BLOB NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (kind, ref, model)
+);
+
+-- Semantic score of a posting against the tracks and the profile (see scoring/match.py).
+CREATE TABLE IF NOT EXISTS job_match (
+  job_id TEXT PRIMARY KEY,
+  model TEXT NOT NULL,
+  query_hash TEXT NOT NULL,
+  text_hash TEXT NOT NULL,
+  semantic REAL NOT NULL DEFAULT 0,
+  track_sim REAL NOT NULL DEFAULT 0,
+  profile_sim REAL,
+  best_track TEXT,
+  promoted INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_job_match_promoted ON job_match(promoted);
 """
 
 JSON_FIELDS = {
@@ -300,6 +357,9 @@ def reassign_urls(conn: sqlite3.Connection, from_id: str, to_id: str) -> None:
 def delete_job(conn: sqlite3.Connection, job_id: str) -> None:
     conn.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
     conn.execute("DELETE FROM job_urls WHERE job_id = ?", (job_id,))
+    conn.execute("DELETE FROM labels WHERE job_id = ?", (job_id,))
+    conn.execute("DELETE FROM job_match WHERE job_id = ?", (job_id,))
+    conn.execute("DELETE FROM embeddings WHERE kind = 'job' AND ref = ?", (job_id,))
 
 
 def _job_filter(statuses: Iterable[str] | None, track: str | None, min_score: float | None,
@@ -556,6 +616,48 @@ def get_meta(conn: sqlite3.Connection, key: str, default: str = "") -> str:
 def set_meta(conn: sqlite3.Connection, key: str, value: str) -> None:
     conn.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", (key, value))
     conn.commit()
+
+
+# ---------------------------------------------------------------------------
+# Labels (your own verdicts) and the evaluation queue
+# ---------------------------------------------------------------------------
+
+LABELS = {"good": 2, "maybe": 1, "bad": 0}
+LABEL_NAMES = {v: k for k, v in LABELS.items()}
+
+
+def set_label(conn: sqlite3.Connection, job_id: str, label: int, note: str = "") -> None:
+    now = now_iso()
+    conn.execute(
+        "INSERT INTO labels (job_id, label, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(job_id) DO UPDATE SET label = excluded.label, note = excluded.note, updated_at = excluded.updated_at",
+        (job_id, int(label), note, now, now),
+    )
+
+
+def clear_label(conn: sqlite3.Connection, job_id: str) -> None:
+    conn.execute("DELETE FROM labels WHERE job_id = ?", (job_id,))
+
+
+def get_label(conn: sqlite3.Connection, job_id: str) -> Optional[int]:
+    row = conn.execute("SELECT label FROM labels WHERE job_id = ?", (job_id,)).fetchone()
+    return int(row["label"]) if row else None
+
+
+def move_label(conn: sqlite3.Connection, from_id: str, to_id: str) -> None:
+    """A posting was merged into another one: its verdict moves along unless the other has its own."""
+    conn.execute("UPDATE OR IGNORE labels SET job_id = ? WHERE job_id = ?", (to_id, from_id))
+    conn.execute("DELETE FROM labels WHERE job_id = ?", (from_id,))
+
+
+# Postings an evaluation may be spent on: the quick score is high enough, or semantic matching promoted them.
+EVALUABLE = "(prescore >= ? OR id IN (SELECT job_id FROM job_match WHERE promoted = 1))"
+
+
+def pending_evaluation_count(conn: sqlite3.Connection, prescore_min: float) -> int:
+    return int(conn.execute(
+        "SELECT COUNT(*) FROM jobs WHERE status IN ('new','shortlisted') AND llm_score IS NULL AND " + EVALUABLE,
+        (prescore_min,)).fetchone()[0])
 
 
 # ---------------------------------------------------------------------------

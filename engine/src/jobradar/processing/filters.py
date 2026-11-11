@@ -6,6 +6,7 @@ import re
 import unicodedata
 from typing import Any
 
+from jobradar import i18n
 from jobradar.config import AppConfig
 from jobradar.geo import COUNTRIES, country_code
 from jobradar.i18n import t
@@ -107,6 +108,19 @@ def location_in_country(location: str, country: str, allow_unspecified_remote: b
     return None
 
 
+TRACK_REASON = "hiçbir hedef alana uymuyor"
+
+
+def track_only_reasons() -> tuple[str, str]:
+    """`filtered_reason` of a posting that only the track rule filtered out, in both interface languages."""
+    return TRACK_REASON, i18n.EN.get(TRACK_REASON, TRACK_REASON)
+
+
+def promoted(job: dict[str, Any]) -> bool:
+    """Semantic matching let this posting pass the keyword rules (see scoring/match.py)."""
+    return bool(((job.get("flags") or {}).get("semantic") or {}).get("promoted"))
+
+
 class FilterEngine:
     def __init__(self, cfg: AppConfig, profile: Profile):
         self.cfg = cfg
@@ -119,6 +133,15 @@ class FilterEngine:
 
     def reasons(self, job: dict[str, Any]) -> list[str]:
         """Return the reasons a job is filtered out (empty list = keep)."""
+        out = self.hard_reasons(job)
+        if self.track_mismatch(job) and not (self.cfg.matching.enabled and self.cfg.matching.promote
+                                             and promoted(job)):
+            out.append(t(TRACK_REASON))
+        return out
+
+    def hard_reasons(self, job: dict[str, Any]) -> list[str]:
+        """Rules you set yourself (blocklist, title words, employment type, seniority, age, place, language,
+        clearance, agencies). Semantic matching never overrides these."""
         cfg = self.cfg.filters
         flags = job.get("flags") or {}
         out: list[str] = []
@@ -151,14 +174,17 @@ class FilterEngine:
                 out.append(t("güvenlik soruşturması: {level}", level=flags.get("clearance")))
         if cfg.exclude_agencies and flags.get("agency"):
             out.append(t("aracı firma ilanı"))
-        if cfg.require_track_match and self.track_title:
-            text = job.get("description", "")
-            if not any(ks.any(title) for ks in self.track_title.values()):
-                if len(text) >= 300:
-                    if not any(len(ks.find(text)) >= 3 for ks in self.track_domain.values()):
-                        out.append(t("hiçbir hedef alana uymuyor"))
-                elif job.get("needs_location_check"):
-                    # Company boards list every opening; without a description the
-                    # title is the only signal we have.
-                    out.append(t("hiçbir hedef alana uymuyor"))
         return out
+
+    def track_mismatch(self, job: dict[str, Any]) -> bool:
+        """True when no keyword ties the posting to one of the tracks (and the track rule is on)."""
+        if not (self.cfg.filters.require_track_match and self.track_title):
+            return False
+        title = job.get("title", "")
+        text = job.get("description", "")
+        if any(ks.any(title) for ks in self.track_title.values()):
+            return False
+        if len(text) >= 300:
+            return not any(len(ks.find(text)) >= 3 for ks in self.track_domain.values())
+        # Company boards list every opening; without a description the title is the only signal we have.
+        return bool(job.get("needs_location_check"))
