@@ -21,6 +21,14 @@ trap 'rm -rf "$WORK"' EXIT
 BUILD="$WORK/build"
 APP="$BUILD/Release/JobRadar.app"
 
+# Runs a tool without its remarks; what it printed is shown only when it fails.
+quiet() {
+  if ! "$@" >"$WORK/step.log" 2>&1; then
+    cat "$WORK/step.log"
+    return 1
+  fi
+}
+
 if ! ls JobRadar/*.whl >/dev/null 2>&1; then
   echo "The engine package (JobRadar/jobradar-*.whl) is missing. Run scripts/build-engine.command first."
   exit 1
@@ -57,11 +65,7 @@ BINARY="$APP/Contents/MacOS/$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecuta
 
 # Take out the debugging records. They are not needed to run the app, and they hold the folder paths
 # (with the user name) of the Mac that built it.
-if ! xcrun strip -S "$BINARY" 2>"$WORK/strip.log"; then
-  echo "Removing the debugging records did not work:"
-  tail -n 5 "$WORK/strip.log"
-  exit 1
-fi
+quiet xcrun strip -S "$BINARY"
 if grep -q -a -F "$PWD/" "$BINARY"; then
   echo "Note: the app still contains the path of this folder ($PWD)."
 fi
@@ -74,23 +78,23 @@ if [ -z "$IDENTITY" ]; then
 fi
 if [ -n "$IDENTITY" ]; then
   echo "Signing with: $IDENTITY"
-  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+  quiet codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
 else
   echo "No Developer ID certificate found: the app gets a local signature."
   echo "Other Macs will ask once before they open it (see README)."
-  codesign --force --options runtime --sign - "$APP"
+  quiet codesign --force --options runtime --sign - "$APP"
 fi
-codesign --verify --strict "$APP"
+quiet codesign --verify --strict "$APP"
 
 STAGE="$WORK/stage"
 mkdir -p "$STAGE"
 ditto "$APP" "$STAGE/JobRadar.app"
 ln -s /Applications "$STAGE/Applications"
 DMG="$WORK/JobRadar-$VERSION.dmg"
-hdiutil create -volname "JobRadar" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
+quiet hdiutil create -volname "JobRadar" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
 
 if [ -n "$IDENTITY" ]; then
-  codesign --force --timestamp --sign "$IDENTITY" "$DMG"
+  quiet codesign --force --timestamp --sign "$IDENTITY" "$DMG"
   if [ -n "${JOBRADAR_NOTARY_PROFILE:-}" ]; then
     echo "Sending the disk image to Apple for notarisation…"
     xcrun notarytool submit "$DMG" --keychain-profile "$JOBRADAR_NOTARY_PROFILE" --wait

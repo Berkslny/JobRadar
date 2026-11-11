@@ -3,7 +3,7 @@
 JobRadar is a Mac app that looks for jobs for you, judges every posting against your real CV, and writes
 honest application documents for the ones you choose. It runs on your Mac, with the AI model you connect.
 
-**Download:** the disk image (`.dmg`) of the newest version is on the [Releases page](https://github.com/Berkslny/JobRadar/releases/latest).
+**Download:** [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) (macOS 26 or later)
 
 Türkçe: [README.tr.md](README.tr.md)
 
@@ -37,11 +37,10 @@ Türkçe: [README.tr.md](README.tr.md)
 
 ## Installing
 
-1. Download `JobRadar-<version>.dmg` from the [Releases page](https://github.com/Berkslny/JobRadar/releases/latest), open it and drag JobRadar
-   into Applications.
+1. Download [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg), open it and drag JobRadar into Applications.
 2. Open JobRadar. The download is not notarised by Apple, so the first time macOS refuses to open it.
    Close that message, open **System Settings > Privacy & Security**, scroll down to the line about
-   JobRadar and choose **Open Anyway**. This is needed once.
+   JobRadar, choose **Open Anyway** and confirm. This is needed once.
 3. The assistant leads you through four steps: language and look, AI model, your profile (drop your CV and
    check what was read), and what to search for. Then start the first scan.
 
@@ -103,6 +102,7 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | `JobRadar/jobradar-1.0.0-py3-none-any.whl` | The engine as the app carries it. |
 | `engine/` | The engine's source (Python): sources, scoring, tailoring, the local API. |
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
+| `downloads/` | The disk image of the current version. |
 | `tools/` | Translation table and checks. |
 
 After changing the engine: `scripts/build-engine.command`, then build the app again.

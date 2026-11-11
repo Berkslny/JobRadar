@@ -4,7 +4,7 @@ JobRadar senin için iş ilanı arayan, her ilanı gerçek CV'nle karşılaştı
 için dürüst başvuru belgeleri yazan bir Mac uygulamasıdır. Kendi Mac'inde, senin bağladığın yapay zeka
 modeliyle çalışır.
 
-**İndir:** son sürümün disk görüntüsü (`.dmg`) [Releases sayfasında](https://github.com/Berkslny/JobRadar/releases/latest).
+**İndir:** [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) (macOS 26 ya da üstü)
 
 English: [README.md](README.md)
 
@@ -38,11 +38,10 @@ English: [README.md](README.md)
 
 ## Kurulum
 
-1. `JobRadar-<sürüm>.dmg` dosyasını [Releases sayfasından](https://github.com/Berkslny/JobRadar/releases/latest) indir, aç ve JobRadar'ı
-   Uygulamalar klasörüne sürükle.
+1. [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) dosyasını indir, aç ve JobRadar'ı Uygulamalar klasörüne sürükle.
 2. JobRadar'ı aç. İndirilen sürüm Apple onayından (notarization) geçmediği için macOS ilk seferde
    açmayı reddeder. O mesajı kapat, **Sistem Ayarları > Gizlilik ve Güvenlik** bölümünde aşağı inip
-   JobRadar ile ilgili satırda **Yine de Aç**'ı seç. Bu yalnızca bir kez gerekir.
+   JobRadar ile ilgili satırda **Yine de Aç**'ı seç ve onayla. Bu yalnızca bir kez gerekir.
 3. Kurulum yardımcısı dört adımda ilerler: dil ve görünüm, yapay zeka modeli, profilin (CV'ni bırak,
    okunanları kontrol et) ve ne aranacağı. Sonra ilk taramayı başlat.
 
@@ -105,6 +104,7 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | `JobRadar/jobradar-1.0.0-py3-none-any.whl` | Uygulamanın taşıdığı motor paketi. |
 | `engine/` | Motorun kaynağı (Python): kaynaklar, puanlama, belge yazımı, yerel API. |
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
+| `downloads/` | Güncel sürümün disk görüntüsü. |
 | `tools/` | Çeviri tablosu ve kontroller. |
 
 Motoru değiştirdikten sonra: `scripts/build-engine.command`, ardından uygulamayı yeniden derle.

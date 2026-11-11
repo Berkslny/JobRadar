@@ -7,7 +7,7 @@ xcuserdata/
 DerivedData/
 build/
 
-# Disk images made by scripts/make-dmg.command (they are published under Releases)
+# Disk images made by scripts/make-dmg.command (the published one is in downloads/)
 dist/
 
 # Python
