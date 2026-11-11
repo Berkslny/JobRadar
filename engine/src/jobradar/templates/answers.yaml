@@ -1,0 +1,37 @@
+# Answers for application forms: questions that forms ask again and again and that are not in your profile.
+# The JobRadar app edits this file for you (Profile > Form answers).
+#   de: the answer in your main application language   en: the answer in English
+# Rows that are still TODO are not shown.
+# Name, e-mail, phone, address, links, citizenship, work permit, start date, salary expectation and
+# languages come from the profile automatically.
+
+answers:
+  - id: notice_period
+    label: Notice period
+    de: TODO
+    en: TODO
+
+  - id: relocation
+    label: Willingness to relocate
+    de: TODO
+    en: TODO
+
+  - id: travel
+    label: Willingness to travel
+    de: TODO
+    en: TODO
+
+  - id: driving_license
+    label: Driving licence
+    de: TODO
+    en: TODO
+
+  - id: work_mode
+    label: Preferred way of working (on site / hybrid / remote)
+    de: TODO
+    en: TODO
+
+  - id: interview_availability
+    label: Availability for interviews
+    de: TODO
+    en: TODO

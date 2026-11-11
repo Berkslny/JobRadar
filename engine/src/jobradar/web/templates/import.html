@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}İçe aktar · JobRadar{% endblock %}
+{% block content %}
+<h1>İçe aktar</h1>
+<p class="muted">API'si olmayan kaynaklar (StepStone, XING, şirket sayfaları, LinkedIn alarmları) buradan sisteme girer. Hepsi aynı tekrar eleme, filtre ve puanlamadan geçer.</p>
+
+<div class="grid2">
+<div>
+  <div class="panel">
+    <h2>Tek ilan linki</h2>
+    <p class="small muted">StepStone, XING, LinkedIn, Arbeitsagentur ya da şirket kariyer sayfasındaki herhangi bir ilan. Sayfadaki yapılandırılmış ilan verisi (schema.org JobPosting) okunur.</p>
+    <form method="post" action="/import/url" data-busy="Okunuyor…">
+      <input name="url" type="url" placeholder="https://www.stepstone.de/stellenangebote--..." style="width:100%" required>
+      <button class="btn primary" type="submit" style="margin-top:8px">İlanı ekle</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>İş alarmı e-postası</h2>
+    <p class="small muted">LinkedIn, StepStone, Indeed, XING, Glassdoor ya da Arbeitsagentur alarm e-postasının tamamını kopyalayıp yapıştır veya .eml olarak yükle. İçindeki tüm ilan linkleri eklenir; açıklamalar sonraki taramada tamamlanır.</p>
+    <form method="post" action="/import/alert" enctype="multipart/form-data" data-busy="Okunuyor…">
+      <textarea name="text" placeholder="E-posta içeriğini buraya yapıştır"></textarea>
+      <div style="margin-top:8px" class="actions"><input type="file" name="file" accept=".eml,.txt,.html"><button class="btn primary" type="submit">Linkleri ekle</button></div>
+    </form>
+    <p class="small muted">İpucu: Mail uygulamasında alarm e-postalarını <code>data/inbox</code> klasörüne .eml olarak kaydedersen <code>jobradar inbox</code> komutu hepsini okur.</p>
+  </div>
+</div>
+
+<div>
+  <div class="panel">
+    <h2>Tarayıcıdan tek tıkla ekle</h2>
+    <p class="small muted">Bu düğmeyi yer imleri çubuğuna sürükle. Herhangi bir ilan sayfasındayken tıkla: JobRadar yeni sekmede açılır, onaylayınca ilan eklenir.</p>
+    <p><a class="btn primary" href="{{ bookmarklet }}" title="Yer imleri çubuğuna sürükle">＋ JobRadar'a ekle</a></p>
+    <details><summary class="small">Safari ya da sürükleyemiyorsan</summary>
+      <p class="small muted">Herhangi bir sayfayı yer imine ekle, sonra yer imini düzenleyip adresini aşağıdaki kodla değiştir.</p>
+      <code class="bm" id="bm-code">{{ bookmarklet }}</code>
+      <button class="btn small" type="button" data-copy-target="bm-code" style="margin-top:6px">Kodu kopyala</button>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>LinkedIn bağlantıların</h2>
+    <p class="small muted">LinkedIn → Ayarlar → Veri gizliliği → Verilerinin kopyasını al → sadece <b>Connections</b>. Gelen <code>Connections.csv</code> dosyasını yükle. İlan sayfalarında o şirkette tanıdığın varsa gösterilir. Dosya bilgisayarından çıkmaz.</p>
+    <form method="post" action="/import/connections" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv" required>
+      <button class="btn" type="submit" style="margin-top:8px">Yükle</button>
+    </form>
+  </div>
+</div>
+</div>
+{% endblock %}

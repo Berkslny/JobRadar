@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title|clean_title }} · JobRadar{% endblock %}
+{% block content %}
+<div class="panel">
+  <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <h1>{{ job.title|clean_title }}</h1>
+      <div class="muted">{{ job.company or 'Şirket bilinmiyor' }} · {{ job.location or 'konum yok' }}{% if track %} · {{ track.name }}{% endif %}</div>
+      <div style="margin-top:6px">{% for label, sev in badges %}<span class="badge {{ sev }}">{{ label }}</span>{% endfor %}</div>
+    </div>
+    <div style="text-align:right">
+      <span class="score {{ job|score_class }}" style="font-size:20px">{% if job.llm_score is not none %}{{ '%.1f'|format(job.llm_score) }} / 5{% else %}ön puan {{ '%.0f'|format(job.prescore) }}{% endif %}</span>
+      <div class="status" style="margin-top:6px">{{ STATUS_LABELS[job.status] }}{% if job.live_status == 'closed' %} · <span class="badge bad">kapanmış olabilir</span>{% endif %}</div>
+    </div>
+  </div>
+
+  <div class="actions" style="margin-top:14px">
+    {% if job.apply_url or job.url %}<a class="btn primary" href="{{ job.apply_url or job.url }}" target="_blank" rel="noopener">İlanı aç ↗</a>{% endif %}
+    <form method="post" action="/jobs/{{ job.id }}/enrich" data-busy="Getiriliyor…"><button class="btn" type="submit">Açıklamayı getir</button></form>
+    <form method="post" action="/jobs/{{ job.id }}/evaluate" data-busy="Değerlendiriliyor… (≈20 sn)"><button class="btn" type="submit" {{ '' if has_llm else 'disabled title="LLM bağlı değil"' }}>{{ 'Yeniden değerlendir' if ev else 'LLM ile değerlendir' }}</button></form>
+    <form method="post" action="/jobs/{{ job.id }}/tailor" data-busy="CV ve ön yazı hazırlanıyor… (≈1 dk)">
+      <select name="language"><option value="">Dil: otomatik</option><option value="de">Almanca</option><option value="en">İngilizce</option></select>
+      <button class="btn" type="submit" {{ '' if has_llm else 'disabled' }}>CV + Anschreiben hazırla</button>
+    </form>
+    <form method="post" action="/jobs/{{ job.id }}/status">
+      <select name="status">{% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if s == job.status }}>{{ STATUS_LABELS[s] }}</option>{% endfor %}</select>
+      <button class="btn" type="submit">Durumu kaydet</button>
+    </form>
+  </div>
+  {% if job.filtered_reason %}<div class="warnbox" style="margin-top:12px">Elendi: {{ job.filtered_reason }}</div>{% endif %}
+  {% if todo_facts %}<div class="warnbox" style="margin-top:12px">Profilinde TODO içeren gerçekler var ({{ todo_facts|join(', ') }}). Belgeler hazırlamadan önce data/profile.yaml dosyasını tamamla.</div>{% endif %}
+</div>
+
+<div class="grid2">
+<div>
+  {% if ev %}
+  {% set r = ev.result %}
+  <div class="panel">
+    <h2>Değerlendirme <span class="muted small">({{ ev.provider }}/{{ ev.model }}, {{ ev.created_at[:16].replace('T', ' ') }})</span></h2>
+    <p>{{ r.summary }}</p>
+    <div class="dim">
+      {% for key, label in [('cv_match', 'CV uyumu'), ('north_star', 'Hedef uyumu'), ('comp', 'Maaş'), ('culture', 'Kültür'), ('red_flags', 'Risk (5=yok)')] %}
+      <div><b>{{ r.dimensions[key] if r.dimensions[key] is not none else '–' }}</b><span class="small muted">{{ label }}</span></div>
+      {% endfor %}
+    </div>
+    <h3>Şartlar ve kanıtlar</h3>
+    <table class="req">
+      <thead><tr><th>Şart</th><th>Önem</th><th>Eşleşme</th><th>Kanıt</th></tr></thead>
+      <tbody>
+      {% for q in r.requirements %}
+      <tr>
+        <td>{{ q.requirement }}{% if q.note %}<span class="fact">{{ q.note }}</span>{% endif %}</td>
+        <td class="small">{{ 'zorunlu' if q.importance == 'must' else 'artı' }}</td>
+        <td class="m-{{ q.match }}">{{ {'strong': 'güçlü', 'partial': 'kısmi', 'gap': 'eksik'}[q.match] }}</td>
+        <td>{% for fid in q.evidence %}<b class="small">{{ fid }}</b><span class="fact">{{ facts.get(fid, '') }}</span>{% else %}<span class="muted">–</span>{% endfor %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% for title, key in [('Güçlü yanlar', 'strengths'), ('Eksikler', 'gaps'), ('Riskler', 'red_flags'), ('Mülakat hazırlığı', 'interview_topics'), ('Uyarlama ipuçları', 'tailoring_hints')] %}
+      {% if r[key] %}<h3>{{ title }}</h3><ul class="tight">{% for x in r[key] %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    {% endfor %}
+    {% if r.legitimacy_notes %}<h3>İlanın güvenilirliği: {{ r.legitimacy|label('legitimacy') }}</h3><p class="small">{{ r.legitimacy_notes }}</p>{% endif %}
+    {% if ev.notes %}<h3>Kod tarafı düzeltmeler</h3><ul class="tight small">{% for n in ev.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="panel" id="docs">
+    <h2>Başvuru belgeleri</h2>
+    {% if docs %}
+      {% for d in docs %}
+      <div style="border-top:1px solid var(--line);padding:10px 0">
+        <b>v{{ d.version }}</b> <span class="muted small">{{ d.created_at[:16].replace('T', ' ') }} · {{ 'Almanca' if d.language == 'de' else 'İngilizce' }}</span>
+        {% if d.approved %}<span class="badge ok">onaylandı</span>{% endif %}
+        {% if d.validation.ok %}<span class="badge ok">doğrulama temiz</span>{% else %}<span class="badge warn">doğrulama uyarısı</span>{% endif %}
+        <div style="margin:6px 0">{% for f in d.files if f.endswith(('.pdf', '.html', '.md')) %}<a class="chip" href="/files/{{ d.id }}/{{ f }}" target="_blank">{{ f }}</a>{% endfor %}</div>
+        {% if d.validation.removed %}<div class="small warnbox">Kanıtsız olduğu için çıkarılanlar: {{ d.validation.removed|join('; ') }}</div>{% endif %}
+        {% set errs = d.validation.violations|selectattr('severity', 'equalto', 'error')|list %}
+        {% if errs %}<details><summary>Kalan doğrulama hataları ({{ errs|length }})</summary><ul class="tight small">{% for v in errs %}<li>{{ v.where }}: {{ v.message }}</li>{% endfor %}</ul></details>{% endif %}
+        {% set rv = d.validation.review %}
+        {% if rv and rv.enabled %}
+        <div class="small" style="margin-top:6px">İkinci okuma:
+          {% if rv.error %}<span class="badge warn">yapılamadı</span> <span class="muted">{{ rv.error[:160] }}</span>
+          {% elif rv.applied %}<span class="badge ok">önerilerle düzeltildi</span>
+          {% elif rv.rejected %}<span class="badge warn">düzeltme reddedildi</span> <span class="muted">{{ rv.rejected }}</span>
+          {% elif rv.verdict == 'ok' %}<span class="badge ok">sorun bulmadı</span>
+          {% else %}<span class="badge warn">önerileri var</span>{% endif %}
+          {% if rv.summary %}<span class="muted"> {{ rv.summary }}</span>{% endif %}
+        </div>
+        {% if rv.issues %}<details><summary class="small">İkinci okuma notları ({{ rv.issues|length }})</summary><ul class="tight small">{% for i in rv.issues %}<li>{% if i.where %}<b>{{ i.where }}</b> {% endif %}{{ i.problem }}{% if i.suggestion %} → {{ i.suggestion }}{% endif %}</li>{% endfor %}</ul></details>{% endif %}
+        {% endif %}
+        {% set pc = d.validation.pdf_check %}
+        {% if pc %}
+        <div class="small" style="margin-top:6px">PDF kontrolü:
+          {% if pc.ok %}<span class="badge ok">temiz</span>{% else %}<span class="badge warn">{{ pc.issues|length }} uyarı</span>{% endif %}
+          {% if pc.cv and pc.cv.pages %}<span class="muted"> CV {{ pc.cv.pages }} sayfa{% if pc.letter and pc.letter.pages %}, ön yazı {{ pc.letter.pages }} sayfa{% endif %}</span>{% endif %}
+          {% if pc.keywords %}<span class="muted"> · şartların {{ pc.keywords.covered|length }}/{{ pc.keywords.covered|length + pc.keywords.missing|length }} tanesi CV'de geçiyor</span>{% endif %}
+        </div>
+        {% if pc.issues %}<ul class="tight small">{% for i in pc.issues %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+        {% if pc.keywords and pc.keywords.missing %}<details><summary class="small">CV'de geçmeyen, profilinin desteklediği şartlar</summary><ul class="tight small">{% for k in pc.keywords.missing %}<li>{{ k }}</li>{% endfor %}</ul></details>{% endif %}
+        {% endif %}
+        <div class="actions" style="margin-top:6px">
+          <a class="btn small" href="/docs/{{ d.id }}/diff">Değişiklikleri gör</a>
+          {% if not d.approved %}
+          <form method="post" action="/docs/{{ d.id }}/approve"><button class="btn small" type="submit">Bu sürümü onayla</button></form>
+          {% endif %}
+        </div>
+        <div class="small muted">Klasör: data/applications/{{ d.folder }}</div>
+      </div>
+      {% endfor %}
+      <p class="small muted">Belgeleri oku, gerekirse düzenle, onayla. Başvuruyu ilan sayfasından kendin gönder ve durumu "Başvuruldu" yap.</p>
+    {% else %}
+      <p class="muted">Henüz belge yok. Önce değerlendir, sonra "CV + Anschreiben hazırla".</p>
+    {% endif %}
+  </div>
+
+  <div class="panel">
+    <h2>İlan metni</h2>
+    {% if job.description %}<div class="desc">{{ job.description }}</div>{% else %}<p class="muted">Açıklama yok. "Açıklamayı getir" ile çekmeyi dene.</p>{% endif %}
+  </div>
+</div>
+
+<div>
+  <div class="panel">
+    <h2>Bilgiler</h2>
+    <div class="kv small">
+      <div>Yayın</div><div>{{ job.posted_at or 'bilinmiyor' }}</div>
+      <div>İlk görülme</div><div>{{ job.first_seen[:10] }}</div>
+      <div>Son görülme</div><div>{{ job.last_seen[:10] }}</div>
+      <div>Çalışma türü</div><div>{{ job.employment_type|label('employment') }}</div>
+      <div>Kıdem</div><div>{{ job.seniority|label('seniority') }}</div>
+      <div>Çalışma şekli</div><div>{{ job.remote|label('remote') }}</div>
+      {% if job.salary %}<div>Maaş</div><div>{{ job.salary.min|money }}{% if job.salary.max %}–{{ job.salary.max|money }}{% endif %} {{ '€' if job.salary.currency in ('EUR', '', None) else job.salary.currency }} / {{ job.salary.period|label('period') }}</div>{% endif %}
+      <div>Dil</div><div>{{ job.lang or '–' }}</div>
+      <div>Ön puan</div><div>{{ job.prescore }}{% if job.prescore_detail.penalties %} <span class="muted">(cezalar: {% for name, pts in job.prescore_detail.penalties %}{{ name }} {{ pts }}{{ ', ' if not loop.last }}{% endfor %})</span>{% endif %}</div>
+    </div>
+    <h3>Kaynaklar</h3>
+    <ul class="tight small">{% for s in job.sources %}<li><a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.source }}</a>{% if s.origin %} ({{ s.origin }}){% endif %} · {{ s.seen }}</li>{% endfor %}</ul>
+  </div>
+
+  <div class="panel" id="answers">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <h2 style="margin:0">Form cevapları</h2>
+      <div class="seg" data-lang-switch="answers-body"><button type="button" data-lang="de" class="{{ 'on' if answers.language == 'de' }}">DE</button><button type="button" data-lang="en" class="{{ 'on' if answers.language == 'en' }}">EN</button></div>
+    </div>
+    {% if answers.error %}<div class="warnbox small" style="margin-top:8px">{{ answers.error }}</div>{% endif %}
+    <div id="answers-body">
+    {% for g in answers.groups if g['items'] %}
+      <h3>{{ g.title }}</h3>
+      <table class="answers">
+        {% for a in g['items'] %}
+        {% set aid = 'ans-' ~ g.id ~ '-' ~ loop.index %}
+        <tr><td class="lbl">{{ a.label }}</td><td class="val" id="{{ aid }}" data-de="{{ a.de }}" data-en="{{ a.en }}">{{ a.en if answers.language == 'en' else a.de }}</td><td class="cp"><button class="btn small" type="button" data-copy-target="{{ aid }}">Kopyala</button></td></tr>
+        {% endfor %}
+      </table>
+    {% endfor %}
+    </div>
+    {% if answers.missing %}<p class="small muted" style="margin-top:8px">Doldurulmamış: {{ answers.missing|join(', ') }}. Dosya: <code>{{ answers.answers_file }}</code></p>{% endif %}
+  </div>
+
+  {% if replies %}
+  <div class="panel">
+    <h2>E-posta yanıtları</h2>
+    {% for r in replies %}
+    <div class="reply">
+      <div><span class="badge {{ 'bad' if r.kind == 'rejection' else 'ok' if r.kind in ('interview', 'offer', 'assessment') else 'info' }}">{{ r.kind_label }}</span> <span class="muted small">{{ r.received_at[:16].replace('T', ' ') }}</span></div>
+      <div class="subj small">{{ r.subject }}</div>
+      {% if r.state == 'pending' %}
+      <div class="actions" style="margin-top:6px">
+        <form method="post" action="/mail-signals/{{ r.id }}/apply"><input type="hidden" name="back" value="/jobs/{{ job.id }}"><button class="btn small primary" type="submit">{{ ('Uygula: ' ~ r.proposed_label) if r.proposed_label else 'Geçmişe ekle' }}</button></form>
+        <form method="post" action="/mail-signals/{{ r.id }}/dismiss"><input type="hidden" name="back" value="/jobs/{{ job.id }}"><button class="btn small" type="submit">Yok say</button></form>
+      </div>
+      {% else %}<div class="small muted">{{ {'applied': 'uygulandı', 'dismissed': 'yok sayıldı', 'info': 'bilgi'}[r.state] }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if contacts %}
+  <div class="panel">
+    <h2>Bu şirkette tanıdıkların</h2>
+    <ul class="tight small">{% for c in contacts %}<li><a href="{{ c.url }}" target="_blank">{{ c.first_name }} {{ c.last_name }}</a> · {{ c.position }}</li>{% endfor %}</ul>
+    <p class="small muted">Başvurmadan önce referans istemeyi düşün.</p>
+  </div>
+  {% endif %}
+
+  <div class="panel">
+    <h2>Notlar</h2>
+    <form method="post" action="/jobs/{{ job.id }}/notes"><textarea name="notes">{{ job.notes }}</textarea><button class="btn small" type="submit" style="margin-top:6px">Kaydet</button></form>
+  </div>
+
+  <div class="panel">
+    <h2>Geçmiş</h2>
+    <ul class="tight small">{% for e in events %}<li><span class="muted">{{ e.ts[:16].replace('T', ' ') }}</span> {{ e.kind }}{% if e.detail %}: {{ e.detail }}{% endif %}</li>{% else %}<li class="muted">Henüz bir şey yok</li>{% endfor %}</ul>
+  </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Başvuru akışı · JobRadar{% endblock %}
+{% block content %}
+<h1>Başvuru akışı</h1>
+<p class="muted">Kartlar durumlarına göre. Turuncu kenarlı kartlar: başvurudan {{ cfg.follow_up_days }}+ gün geçti, takip zamanı.</p>
+<div class="pipeline">
+  {% for col in PIPELINE_COLUMNS %}
+  <div class="col">
+    <h2>{{ STATUS_LABELS[col] }} <span>{{ cols[col]|length }}</span></h2>
+    {% for j in cols[col] %}
+    <div class="card {{ 'due' if j.id in due }}">
+      <a class="t" href="/jobs/{{ j.id }}">{{ j.title|clean_title }}</a>
+      <div class="small muted">{{ j.company }}</div>
+      <div class="small">{% if j.llm_score is not none %}<span class="score {{ j|score_class }}">{{ '%.1f'|format(j.llm_score) }}</span>{% endif %}
+        {% if j.applied_at %}<span class="muted">başvuru: {{ j.applied_at[:10] }}</span>{% endif %}</div>
+    </div>
+    {% else %}
+    <div class="small muted">–</div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+# Your profile is a fact bank. JobRadar may only write what is stated here into a CV or cover letter:
+# every fact has a unique id, every tailored sentence points to the facts behind it, and drafts that
+# contain numbers, tools or achievements that are not in here are rejected automatically.
+# The JobRadar app builds this file from your CV; you can also write it by hand.
+
+name: Alex Example
+headline: Software Engineer
+email: alex@example.com
+phone: "+1 555 0100"
+city: Berlin
+address: ""                      # used in cover letters, e.g. "Example Street 1, 10115 Berlin"
+links: {}                        # e.g. {LinkedIn: "https://linkedin.com/in/...", GitHub: "https://github.com/..."}
+german_level: ""                 # A1..C2, used to flag postings that need more German than you have
+citizenships: []                 # ISO codes, e.g. [DE]; used to check citizenship requirements
+work_permit: ""
+earliest_start: ""
+
+summary_facts:
+  - id: GEN-1
+    text: Software engineer with five years of experience in backend development.
+
+experience:
+  - id: ACME
+    kind: work                   # work | internship | werkstudent | thesis | project | education | volunteer
+    organization: ACME GmbH
+    title: Backend Engineer
+    location: Berlin
+    start: "2021-03"
+    end: present
+    facts:
+      - id: ACME-1
+        text: Built a billing service in Python (FastAPI, PostgreSQL) that processes 2 million invoices a month.
+        skills: [Python, FastAPI, PostgreSQL]
+
+education:
+  - id: UNI
+    kind: education
+    organization: Example University
+    title: B.Sc. Computer Science
+    location: Berlin
+    start: "2016-10"
+    end: "2020-09"
+    facts: []
+
+projects: []
+
+skills:
+  backend: [Python, FastAPI, PostgreSQL]
+
+languages:
+  - {name: English, level: C1}
+  - {name: German, level: B1}
+
+preferences:
+  dealbreakers: []               # e.g. "pure sales roles", "shift work"
+  nice_to_have: []
+  salary_expectation: ""
+  notes: ""

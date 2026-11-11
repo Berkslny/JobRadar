@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}E-posta yanıtları · JobRadar{% endblock %}
+{% block content %}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+  <div>
+    <h1>E-posta yanıtları</h1>
+    <p class="muted small">Şirketlerden gelen ret, mülakat, test ve teklif e-postaları başvurularınla eşleştirilir. Hiçbir şey kendiliğinden değişmez: her öneriyi sen uygularsın. Gmail salt okunur açılır, mailler okunmuş işaretlenmez.</p>
+  </div>
+  {% if configured and enabled %}
+  <form method="post" action="/mail-sync" data-busy="Kontrol ediliyor…"><button class="btn primary" type="submit">Şimdi kontrol et</button></form>
+  {% endif %}
+</div>
+{% if not enabled %}<div class="warnbox">Kapalı: jobradar.yaml içinde mail_sync.enabled false.</div>
+{% elif not configured %}<div class="warnbox">E-posta ayarı yok. Sunucuda <code>jobradar email</code> ile Gmail uygulama şifresini kaydet; aynı şifre hem özet göndermek hem yanıtları okumak için kullanılır.</div>{% endif %}
+{% if last_error %}<div class="warnbox">Son kontrol hatası: {{ last_error }}</div>{% endif %}
+<p class="small muted">Son kontrol: {{ last_sync[:16].replace('T', ' ') if last_sync else 'henüz yok' }}. Tam ve saatlik taramalarda otomatik çalışır.</p>
+
+<div class="grid2">
+<div>
+  <div class="panel">
+    <h2>Onay bekleyenler ({{ pending|length }})</h2>
+    {% for r in pending %}
+    <div class="reply">
+      <div><span class="badge {{ 'bad' if r.kind == 'rejection' else 'ok' if r.kind in ('interview', 'offer', 'assessment') else 'info' }}">{{ r.kind_label }}</span>
+        <span class="muted small">{{ r.received_at[:16].replace('T', ' ') }} · {{ r.sender }}</span></div>
+      <div class="subj">{{ r.subject }}</div>
+      {% if r.snippet %}<div class="snip">{{ r.snippet[:300] }}</div>{% endif %}
+      <form method="post" action="/mail-signals/{{ r.id }}/apply" class="actions">
+        {% if r.job_id %}
+          <span class="small">İlan: <a href="/jobs/{{ r.job_id }}">{{ r.job_title }} · {{ r.job_company }}</a> ({{ STATUS_LABELS.get(r.job_status, r.job_status) }})</span>
+        {% else %}
+          <select name="job_id" required>
+            <option value="">İlan seç…</option>
+            {% for c in r.candidates %}<option value="{{ c.job_id }}">{{ c.title }} · {{ c.company }}</option>{% endfor %}
+            {% if r.candidates %}<option disabled>──────</option>{% endif %}
+            {% for t in tracked %}<option value="{{ t.id }}">{{ t.label }}</option>{% endfor %}
+          </select>
+        {% endif %}
+        <button class="btn small primary" type="submit">{{ ('Uygula: ' ~ r.proposed_label) if r.proposed_label else 'Uygula' }}</button>
+      </form>
+      <form method="post" action="/mail-signals/{{ r.id }}/dismiss" style="margin-top:6px"><button class="btn small" type="submit">Yok say</button></form>
+    </div>
+    {% else %}<p class="muted">Bekleyen yanıt yok.</p>{% endfor %}
+  </div>
+</div>
+<div>
+  <div class="panel">
+    <h2>Son işlenenler</h2>
+    <ul class="tight small">
+    {% for r in recent %}
+      <li><span class="muted">{{ r.received_at[:10] }}</span> {{ r.kind_label }}: {% if r.job_id %}<a href="/jobs/{{ r.job_id }}">{{ r.job_title or r.subject[:60] }}</a>{% else %}{{ r.subject[:60] }}{% endif %} <span class="muted">({{ {'applied': 'uygulandı', 'dismissed': 'yok sayıldı', 'info': 'bilgi'}.get(r.state, r.state) }})</span></li>
+    {% else %}<li class="muted">Henüz yok.</li>{% endfor %}
+    </ul>
+  </div>
+</div>
+</div>
+{% endblock %}

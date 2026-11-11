@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Değişiklikler v{{ doc.version }} · JobRadar{% endblock %}
+{% block content %}
+<p class="small"><a href="/jobs/{{ job.id }}#docs">← {{ job.title|clean_title }} · {{ job.company }}</a></p>
+<h1>Belgeler v{{ doc.version }}: profilden ne alındı, nasıl yazıldı</h1>
+<p class="muted small">Solda CV ve ön yazıdaki metin, sağda dayandığı profil gerçekleri. "yeniden yazıldı" işaretli satırları profille karşılaştır; anlamı değiştirmiş bir cümle görürsen onaylamadan önce düzelt.</p>
+
+<div class="panel">
+  <h2>Başlık ve özet</h2>
+  <div class="diffrow"><div><b>{{ diff.headline.text or '–' }}</b></div><div class="src">Profildeki başlık: <b>{{ diff.headline.original or '–' }}</b></div></div>
+  {% set it = diff.summary %}
+  <div class="diffrow"><div>{{ it.text or '–' }} {% if it.changed %}<span class="badge info">yeniden yazıldı</span>{% endif %}</div>
+    <div class="src">{% for s in it.sources %}<div><b>{{ s.id }}</b> {{ s.text }}</div>{% else %}<span class="muted">kaynak yok</span>{% endfor %}</div></div>
+</div>
+
+<div class="panel">
+  <h2>Deneyim</h2>
+  {% for e in diff.experience %}
+    <h3>{{ e.title }}{% if e.organization %} · {{ e.organization }}{% endif %}</h3>
+    {% for b in e.bullets %}
+    <div class="diffrow"><div>• {{ b.text }} {% if b.changed %}<span class="badge info">yeniden yazıldı</span>{% endif %}</div>
+      <div class="src">{% for s in b.sources %}<div><b>{{ s.id }}</b> {{ s.text }}</div>{% else %}<span class="badge bad">kaynak yok</span>{% endfor %}</div></div>
+    {% endfor %}
+    {% if e.left_out %}<details><summary class="small">Bu girişten kullanılmayan gerçekler ({{ e.left_out|length }})</summary><ul class="tight small">{% for f in e.left_out %}<li><b>{{ f.id }}</b> {{ f.text }}</li>{% endfor %}</ul></details>{% endif %}
+  {% else %}<p class="muted">Deneyim bölümü yok.</p>{% endfor %}
+  {% if diff.omitted_entries %}<p class="small muted" style="margin-top:10px">CV'ye hiç girmeyen girişler: {% for o in diff.omitted_entries %}{{ o.title }}{% if o.organization %} ({{ o.organization }}){% endif %}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+</div>
+
+<div class="panel">
+  <h2>Beceriler</h2>
+  <div class="chiplist">{% for k in diff.skills.chosen %}<span class="chip">{{ k }}</span>{% endfor %}</div>
+  {% if diff.skills.not_chosen %}<p class="small muted" style="margin:8px 0 4px">Profilde olup bu CV'de seçilmeyenler:</p><div class="chiplist">{% for k in diff.skills.not_chosen %}<span class="chip off">{{ k }}</span>{% endfor %}</div>{% endif %}
+</div>
+
+<div class="panel">
+  <h2>Ön yazı{% if diff.letter.subject %}: {{ diff.letter.subject }}{% endif %}</h2>
+  {% for b in diff.letter.paragraphs %}
+  <div class="diffrow"><div>{{ b.text }}</div>
+    <div class="src">{% for s in b.sources %}<div><b>{{ s.id }}</b> {{ s.text }}</div>{% else %}<span class="muted">kaynak gerekmeyen paragraf</span>{% endfor %}</div></div>
+  {% else %}<p class="muted">Ön yazı yok.</p>{% endfor %}
+</div>
+
+{% if diff.answers %}
+<div class="panel">
+  <h2>Form cevapları</h2>
+  {% for a in diff.answers %}
+  <div class="diffrow"><div><b class="small">{{ a.question }}</b><br>{{ a.text }}</div>
+    <div class="src">{% for s in a.sources %}<div><b>{{ s.id }}</b> {{ s.text }}</div>{% else %}<span class="muted">kaynak yok</span>{% endfor %}</div></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

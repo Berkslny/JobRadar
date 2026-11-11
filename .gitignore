@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Xcode: per-user state and build products
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+
+# Disk images made by scripts/make-dmg.command (they are published under Releases)
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/

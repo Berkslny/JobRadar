@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Durum · JobRadar{% endblock %}
+{% block content %}
+<h1>Durum</h1>
+{% if running %}<div class="warnbox">Tarama sürüyor. Bitince bu sayfa kendiliğinden yenilenir.</div>{% endif %}
+{% if last_error %}<div class="warnbox">Son tarama hata ile bitti: {{ last_error }}</div>{% endif %}
+<p class="muted">Son tam çalıştırma: {{ last_cycle[:16].replace('T', ' ') if last_cycle else 'henüz yok' }}{% if last_quick %} · son hızlı tarama: {{ last_quick[:16].replace('T', ' ') }}{% endif %}</p>
+
+<div class="grid2">
+<div>
+  <div class="panel">
+    <h2>Kaynak sağlığı</h2>
+    <table>
+      <thead><tr><th>Kaynak</th><th>Son çalışma</th><th>Bulunan</th><th>Yeni</th><th>Elenen</th><th>Durum</th></tr></thead>
+      <tbody>
+      {% for h in health %}
+      <tr>
+        <td><b>{{ h.source }}</b></td>
+        <td class="small">{{ (h.finished_at or h.started_at)[:16].replace('T', ' ') }}</td>
+        <td>{{ h.found }}</td><td>{{ h.new }}</td><td>{{ h.filtered }}</td>
+        <td>{% if h.error %}<span class="badge bad">hata</span> <span class="small">{{ h.error[:140] }}</span>
+            {% elif h.consecutive_empty >= 3 %}<span class="badge warn">3 kez boş</span>
+            {% else %}<span class="badge ok">çalışıyor</span>{% endif %}
+            {% if h.warnings %}<details><summary class="small">{{ h.warnings|length }} uyarı</summary><ul class="tight small">{% for w in h.warnings %}<li>{{ w[:200] }}</li>{% endfor %}</ul></details>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted">Henüz tarama yapılmadı.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Kaynak verimliliği</h2>
+    <p class="small muted">Hangi kaynak gerçekten işe yarıyor: ilan sayısı, LLM ile değerlendirilen, ortalama puan, 4.0+ ilan ve başvuru.</p>
+    <table>
+      <thead><tr><th>Kaynak</th><th>İlan</th><th>Değerlendirilen</th><th>Ort. puan</th><th>4.0+</th><th>Başvuru</th></tr></thead>
+      <tbody>
+      {% for s in sources %}
+      <tr><td>{{ s.source }}</td><td>{{ s.jobs }}</td><td>{{ s.evaluated }}</td><td>{{ s.avg_score if s.avg_score is not none else '–' }}</td><td>{{ s.strong }}</td><td>{{ s.applied }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h2>Son çalıştırmalar</h2>
+    <table>
+      <thead><tr><th>Zaman</th><th>Kaynak</th><th>Bulunan</th><th>Yeni</th><th>Birleşen</th><th>Hata</th></tr></thead>
+      <tbody>
+      {% for r in runs %}
+      <tr class="small"><td>{{ r.started_at[:16].replace('T', ' ') }}</td><td>{{ r.source }}</td><td>{{ r.found }}</td><td>{{ r.new }}</td><td>{{ r.merged }}</td><td>{{ (r.error or '')[:80] }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div>
+  <div class="panel">
+    <h2>Huni</h2>
+    {% set maxv = (funnel|map(attribute=1)|max) or 1 %}
+    <table class="funnel">
+      {% for label, n in funnel %}
+      <tr><td class="small" style="width:110px">{{ label }}</td><td><div class="bar" style="width: {{ (n / maxv * 100)|round(0) }}%; min-width: {{ 2 if n else 0 }}px"></div></td><td class="small" style="width:40px">{{ n }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="panel">
+    <h2>Eksik beceriler</h2>
+    <p class="small muted">Puanı 3.0 ve üstü ilanlarda (son 120 gün) en sık "eksik" ya da "kısmi" çıkan şartlar. Neyi öğrenmenin en çok kapıyı açacağını gösterir.</p>
+    {% if gaps.terms %}
+    <table>
+      <thead><tr><th>Beceri</th><th title="Kaç ilanda geçti">İlan</th><th title="Tamamen eksik">Eksik</th><th title="Kısmen karşılanıyor">Kısmen</th><th title="Zorunlu şart olarak">Zorunlu</th></tr></thead>
+      <tbody>
+      {% for t in gaps.terms %}
+      <tr><td><b>{{ t.term }}</b>{% if t.examples %}<details><summary class="small">örnekler</summary><ul class="tight small">{% for x in t.examples %}<li><a href="/jobs/{{ x.job_id }}">{{ x.title }}</a> · {{ x.text }}</li>{% endfor %}</ul></details>{% endif %}</td><td>{{ t.jobs }}</td><td>{{ t.gap }}</td><td>{{ t.partial }}</td><td>{{ t.must }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<p class="muted small">{{ gaps.jobs_considered }} değerlendirmede tekrar eden eksik bulunmadı.</p>{% endif %}
+  </div>
+  <div class="panel">
+    <h2>Takip zamanı gelenler</h2>
+    {% if due %}
+    <ul class="tight small">{% for j in due %}<li><a href="/jobs/{{ j.id }}">{{ j.title|clean_title }}</a> · {{ j.company }} · {{ (j.applied_at or '')[:10] }}</li>{% endfor %}</ul>
+    {% else %}<p class="muted small">Şu an yok.</p>{% endif %}
+  </div>
+</div>
+</div>
+{% endblock %}

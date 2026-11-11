@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}JobRadar{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body data-running="{{ '1' if running else '0' }}" data-reload="{{ '1' if reload_after_scan else '0' }}">
+<header class="top">
+  <a class="brand" href="/jobs">◎ JobRadar</a>
+  {% set p = request.url.path %}
+  <nav>
+    <a href="/jobs" class="{{ 'on' if p.startswith('/jobs') }}">İlanlar</a>
+    <a href="/pipeline" class="{{ 'on' if p.startswith('/pipeline') }}">Başvuru akışı</a>
+    <a href="/mail" class="{{ 'on' if p.startswith('/mail') }}">Yanıtlar{% if pending_replies %} <span class="pill">{{ pending_replies }}</span>{% endif %}</a>
+    <a href="/stats" class="{{ 'on' if p.startswith('/stats') }}">Durum</a>
+    <a href="/import" class="{{ 'on' if p.startswith('/import') or p.startswith('/add') }}">İçe aktar</a>
+  </nav>
+  <form method="post" action="/cycle" data-busy="Tarama başlatılıyor…">
+    <button class="btn primary" type="submit" {{ 'disabled' if running }}>{{ 'Tarama sürüyor…' if running else 'Şimdi tara' }}</button>
+  </form>
+  {% if auth_enabled %}<form class="logout" method="post" action="/logout"><button class="btn" type="submit">Çıkış</button></form>{% endif %}
+</header>
+{% if running %}
+{% set pct = (((progress.fraction if progress and progress.fraction else 0) * 100)|round(0))|int %}
+<div class="runbar" title="Tarama sürüyor"><div class="runbar-fill" style="width: {{ pct }}%"></div></div>
+<div class="runinfo">{{ (progress.label if progress and progress.label else 'Tarama sürüyor') }}{% if progress and progress.detail %}: {{ progress.detail }}{% endif %} · %{{ pct }}</div>
+{% endif %}
+{% if msg %}<div class="flash {{ kind }}">{{ msg }}</div>{% endif %}
+<main>
+{% block content %}{% endblock %}
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

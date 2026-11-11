@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JobRadar · Giriş</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="login">
+  <h1>◎ JobRadar</h1>
+  <p class="muted">Sunucuda <code>jobradar api-token</code> komutunun verdiği anahtarla giriş yap.</p>
+  {% if error %}<div class="flash err">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="next" value="{{ next }}">
+    <input type="password" name="token" placeholder="API anahtarı" autocomplete="current-password" required autofocus>
+    <button class="btn primary" type="submit">Giriş</button>
+  </form>
+</main>
+</body>
+</html>

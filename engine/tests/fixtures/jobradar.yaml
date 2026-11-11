@@ -1,0 +1,193 @@
+# JobRadar ayar dosyası
+# Değiştirdikten sonra: `jobradar doctor` (kontrol) ve gerekirse `jobradar refilter` (eski ilanlara yeni filtreyi uygula).
+#
+# Anahtar kelime kuralı: 5+ harfli kelimeler parça olarak da eşleşir
+# ("entwickl" -> "Hardwareentwickler"). Kısa kelimeler (FPGA, ESG) tam kelime aranır.
+# Başına "=" koyarsan her zaman tam kelime aranır (örn. "=Fahrer").
+
+data_dir: data
+profile: data/profile.yaml
+dashboard_port: 8787
+follow_up_days: 10          # başvurudan kaç gün sonra "takip et" hatırlatması gelsin
+
+# ---------------------------------------------------------------------------
+# Hedef alanlar. Her ilan en iyi uyduğu alana atanır.
+# ---------------------------------------------------------------------------
+tracks:
+  - id: fpga
+    name: FPGA / Embedded hardware
+    priority: 1
+    nationwide: true          # bütün ülkede ara
+    north_star: >-
+      FPGA and embedded hardware development (VHDL/Verilog, Zynq) for aerospace, sensor and UAV
+      systems; junior / career-starter level or Werkstudent; ideally around Hamburg, otherwise anywhere in Germany.
+    title_keywords: [FPGA, VHDL, Verilog, SystemVerilog, Embedded, Eingebettet, Hardwareentwickl, Hardware-Entwickl,
+                     Hardware Engineer, Hardware Developer, Elektronikentwickl, Electronics Engineer,
+                     Electronic Engineer, Elektronikingenieur, Digital Design, Digitaldesign, ASIC, SoC, Zynq,
+                     Signalverarbeitung, Signal Processing, DSP, Electronic Warfare, Radar, Avionik, Avionics,
+                     UAV, Drohne, Drone, Unmanned, Bildverarbeitung, Computer Vision, Sensorik]
+    domain_keywords: [Vivado, Vitis, Xilinx, Quartus, HLS, AXI, PCB, Leiterplatte, Schaltplan, Oszilloskop,
+                      Verteidigung, Defence, Defense, Rüstung, Bundeswehr, Luftfahrt, Aerospace, Echtzeit, Real-time]
+    search_terms: [FPGA, FPGA Entwickler, Embedded Hardware Engineer, Hardwareentwickler Elektronik, Electronic Warfare]
+
+  - id: energy
+    name: Energy systems / Grid / E-mobility
+    priority: 2
+    north_star: >-
+      Energy-system, grid and e-mobility engineering or analysis (charging, flexibility, tariffs, power systems,
+      medium voltage); junior level; Hamburg region.
+    title_keywords: [Energy, Energie, Power System, Stromnetz, Netzplanung, Netzbetrieb, Netzintegration, Grid,
+                     Elektrotechnik, Electrical Engineer, Elektroingenieur, Ingenieur Elektro, E-Mobility,
+                     Elektromobilität, eMobility, Ladeinfrastruktur, Charging, Smart Grid, Flexibilit,
+                     Energiewirtschaft, Energiemarkt, Energy Market, Energiehandel, Battery, Batterie,
+                     Mittelspannung, Medium Voltage, Schaltanlage, Switchgear, Leistungselektronik, Power Electronics,
+                     Photovoltaik, Solar, Netzanschluss]
+    domain_keywords: [MILP, Optimierung, Optimization, Lastprofil, Load Profile, Tarif, Tariff, V2G, bidirektional,
+                      bidirectional, PowerFactory, Netzberechnung, EPLAN, Energiewende, Netzbetreiber, Verteilnetz,
+                      Übertragungsnetz]
+    search_terms: [Elektroingenieur Energietechnik, E-Mobility Engineer, Energiesysteme, Netzplanung, Energy Analyst]
+
+  - id: sustainability
+    name: Sustainability / ESG / LCA
+    priority: 3
+    north_star: >-
+      Sustainability, ESG, life-cycle assessment or energy-management roles where an engineering background is an
+      advantage; junior level; Hamburg region.
+    title_keywords: [Sustainability, Nachhaltigkeit, ESG, LCA, Life Cycle, Ökobilanz, Carbon, CO2, Klima, Climate,
+                     Decarboni, Dekarboni, CSRD, Environmental, Umweltmanagement, Circular, Kreislaufwirtschaft,
+                     Energiemanagement, Energy Management, Energieeffizienz, Energy Efficiency]
+    domain_keywords: [ISO 14001, ISO 50001, GHG, Scope 3, Treibhausgas, Taxonomie, Taxonomy, SBTi, openLCA, SimaPro]
+    search_terms: [Nachhaltigkeitsmanager, Sustainability Manager, ESG Analyst, Energiemanager]
+
+# ---------------------------------------------------------------------------
+search:
+  country: Germany
+  locations:
+    - {city: Hamburg, radius_km: 100}
+  preferred_cities: [Hamburg, Bremen, Lübeck, Kiel, Lüneburg]
+  include_remote: true
+  max_age_days: 120          # Alman şirketleri ilanları aylarca açık tutar; tazelik zaten puanı etkiler
+  # fulltime, parttime, werkstudent, internship, thesis, trainee, apprenticeship, freelance, contract
+  employment_types: [fulltime, werkstudent, trainee]
+
+# ---------------------------------------------------------------------------
+sources:
+  jobspy:                     # LinkedIn ve Indeed (pip install 'jobradar[jobspy]')
+    enabled: true
+    sites: [linkedin, indeed]   # glassdoor da eklenebilir; Almanya'da az ilan getiriyor
+    results_wanted: 25        # her sorgu ve site başına
+    hours_old: 72
+    fetch_description: false  # false: açıklamaları sadece umut vadeden ilanlar için JobRadar çeker (LinkedIn'e çok daha az istek)
+    pause_seconds: 5          # LinkedIn hız sınırına takılmamak için sorgular arası bekleme
+    max_queries: 12
+    linkedin_cooldown_seconds: 60   # LinkedIn 429 verirse bu kadar bekle
+    linkedin_max_blocks: 2          # bu kadar 429'dan sonra o çalıştırmada LinkedIn'i atla
+    proxies: []
+
+  arbeitsagentur:             # Bundesagentur für Arbeit resmi API'si
+    enabled: true
+    angebotsart: [1, 34]      # 1 = iş, 34 = Praktikum/Trainee (Werkstudent ilanlarının çoğu burada)
+    days: 30
+    size: 50
+    max_pages: 3              # sorgu başına en fazla 3 x 50 ilan
+    include_zeitarbeit: false
+    include_private_agencies: false
+
+  freehire:                   # freehire.me: şirket ATS'leri + XING + EURES (kişisel kullanımda ücretsiz)
+    enabled: true
+    countries: [DE]
+    limit: 50
+    posted_within_days: 30
+    max_queries: 12
+    max_pages: 3
+
+  # Takip ettiğin şirketlerin kendi kariyer sistemleri. Yeni şirket eklemek için:
+  #   jobradar detect-ats https://firmanin-kariyer-sayfasi
+  # komutu doğru satırı üretir. ats: greenhouse, lever, lever_eu, ashby, personio,
+  # smartrecruiters, recruitee, workday, softgarden, rheinmetall
+  companies:
+    - {name: Helsing, ats: greenhouse, slug: helsing}
+    - {name: Rheinmetall, ats: rheinmetall, url: "https://www.rheinmetall.com/en/career/vacancies", max_pages: 150}  # ~1400 ilan, sayfa başı 10
+    - {name: RENK, ats: softgarden, url: "https://renk-group.softgarden.io/de/widgets/jobs"}
+    # Aşağıdakileri `jobradar detect-ats` ile doğrulayıp aç:
+    # - {name: Quantum Systems, ats: personio, slug: quantum-systems}
+    # - {name: STARK, ats: ashby, slug: stark}
+    # - {name: Beispiel AG, ats: workday, url: "https://beispiel.wd3.myworkdayjobs.com/External", search: "FPGA"}
+
+  inbox_dir: inbox            # data/inbox klasörüne bıraktığın .eml alarm e-postaları `jobradar inbox` ile okunur
+  enrich_per_run: 40          # açıklaması eksik ilanlardan her çalıştırmada en fazla kaçı tamamlansın
+
+# ---------------------------------------------------------------------------
+filters:
+  title_exclude: [Vertrieb, Sales, Außendienst, Kaufmann, Kauffrau, Buchhalt, Steuerfach, Pflege, Erzieher,
+                  Lehrer, "=Fahrer", Lagerist, Monteur, Elektroniker, Elektriker, Mechatroniker, Servicetechniker,
+                  Kundendienst, Callcenter, Recruiter, Personalreferent, Ausbildung zum, Ausbildung zur]
+  company_blacklist: []
+  exclude_senior: true        # Senior / Lead / Leitung başlıklarını ele
+  exclude_agencies: false     # aracı firma ilanlarını ele (false = sadece işaretle)
+  require_track_match: true   # hiçbir hedef alana uymayan ilanları ele
+  allow_unspecified_remote: true
+  german_gap_policy: warn     # warn = işaretle, exclude = Almanca şartı seviyenin 2+ üstündeyse ele
+  clearance_policy: warn      # warn / exclude / ignore (güvenlik soruşturması ve vatandaşlık şartı)
+
+# ---------------------------------------------------------------------------
+scoring:
+  prescore_min: 40            # LLM'e gönderilecek minimum ön puan (0-100)
+  llm_max_per_run: 20         # her çalıştırmada en fazla kaç ilan LLM ile değerlendirilsin
+  apply_threshold: 4.0        # bu puanın altı "başvurma" önerisi alır
+  max_description_chars: 12000
+
+llm:
+  # claude_cli: Claude aboneliğin (claude komutu). Kullanım plan limitinden düşer, ek ücret çıkmaz.
+  #             .env içinde ANTHROPIC_API_KEY olsa bile Claude Code'a geçirilmez.
+  # ollama: bilgisayarında çalışan model, tamamen ücretsiz ama daha yavaş ve daha zayıf.
+  # auto: önce Claude aboneliği, sonra Ollama.
+  provider: claude_cli        # claude_cli | ollama | auto | none | anthropic | openai
+  allow_paid_api: false       # false iken ücretli API'ler (anthropic, uzak openai) hiçbir koşulda kullanılmaz
+  output_language: tr         # değerlendirme metinlerinin dili
+  eval_tier: fast             # değerlendirme: hızlı/ucuz model
+  tailor_tier: smart          # CV ve ön yazı: güçlü model
+  anthropic: {fast_model: claude-haiku-5-5, smart_model: claude-sonnet-5-5}
+  claude_cli: {path: claude, fast_model: haiku, smart_model: sonnet, subscription_only: true}
+  ollama: {base_url: "http://localhost:11434", fast_model: "", smart_model: "", num_ctx: 16384}  # örn. fast_model: qwen3:8b
+  openai: {base_url: "https://api.openai.com/v1", fast_model: "", smart_model: ""}
+
+notify:
+  dashboard_url: http://127.0.0.1:8787   # sunucuda .env'deki JOBRADAR_PUBLIC_URL bunun yerine geçer
+  telegram:
+    enabled: false            # README'deki adımlarla bot oluşturup true yap
+    min_score: 4.0
+    min_prescore_without_llm: 70
+    daily_digest: true
+    health_alerts: true
+  email:
+    enabled: true             # .env'de SMTP_USER ve SMTP_PASSWORD varsa günlük özet maili (jobradar email ile ayarlanır)
+    min_score: 3.5            # özete girecek en düşük LLM puanı
+    max_jobs: 12
+    instant: true             # puanı yüksek yeni ilan değerlendirilir değerlendirilmez ayrı kısa mail at
+    instant_min_score: 4.0
+    instant_max_jobs: 5
+
+mail_sync:                    # şirket yanıtlarını oku: ret, mülakat, test, teklif (Gmail IMAP, aynı uygulama şifresi)
+  enabled: true               # salt okunur: mailler okunmuş işaretlenmez, hiçbir durum onaysız değişmez
+  folder: INBOX
+  days: 21                    # ilk çalıştırmada kaç gün geriye bakılsın
+  max_messages: 150
+
+quick:                        # jobradar run --quick: sunucuda saatlik erken yakalama taraması
+  sources: [companies]        # sadece şirket kariyer sayfaları (companies listesi)
+  max_evaluations: 5          # hızlı taramada en fazla kaç ilan LLM ile değerlendirilsin
+  max_pages: 10               # şirket başına sayfa sınırı (Rheinmetall gibi büyük listeler tam haliyle `run`da taranır)
+
+server:
+  public_url: ""              # sunucuda .env'deki JOBRADAR_PUBLIC_URL kullanılır
+  session_days: 30            # web paneli girişi kaç gün geçerli
+  backups_keep: 14            # data/backups içinde saklanacak yedek sayısı
+
+tailor:
+  pdf_engine: auto            # auto: RenderCV kuruluysa onu, değilse Chrome/Edge kullanır
+  chrome_path: ""
+  sender_city: Hamburg
+  review: true                # ikinci LLM okuması taslağı eleştirir; işe yararsa bir kez düzeltir (kanıtsız iddia eklenemez)
+  cv_max_pages: 2             # PDF kontrolü: CV en fazla kaç sayfa
+  letter_max_pages: 1         # PDF kontrolü: ön yazı en fazla kaç sayfa

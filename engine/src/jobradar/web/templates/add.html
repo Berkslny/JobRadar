@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}JobRadar'a ekle · JobRadar{% endblock %}
+{% block content %}
+<div class="panel" style="max-width:720px">
+  <h1>JobRadar'a ekle</h1>
+  {% if error %}
+    <div class="warnbox" style="margin-top:12px">{{ error }}</div>
+    <p><a href="/import">İçe aktar sayfasına git</a></p>
+  {% else %}
+    {% if page_title %}<p style="margin:10px 0 2px"><b>{{ page_title }}</b></p>{% endif %}
+    <p class="small muted" style="word-break:break-all;margin-top:2px">{{ url }}</p>
+    {% if existing %}
+      <div class="okbox">Bu ilan zaten kayıtlı: <a href="/jobs/{{ existing.id }}">{{ existing.title|clean_title }} · {{ existing.company }}</a> ({{ STATUS_LABELS[existing.status] }})</div>
+    {% endif %}
+    <form method="post" action="/import/url" data-busy="Okunuyor…" class="actions" style="margin-top:12px">
+      <input type="hidden" name="url" value="{{ url }}">
+      <button class="btn primary" type="submit">{{ 'Yeniden oku ve güncelle' if existing else 'İlanı ekle' }}</button>
+      {% if existing %}<a class="btn" href="/jobs/{{ existing.id }}">İlana git</a>{% endif %}
+    </form>
+    <p class="small muted" style="margin-top:12px">İlan sayfası sunucuda okunur, tekrar eleme, filtre ve ön puandan geçer. Puanı yüksekse sıradaki taramada LLM ile değerlendirilir; hemen istersen ilan sayfasında "LLM ile değerlendir" de.</p>
+  {% endif %}
+</div>
+{% endblock %}
