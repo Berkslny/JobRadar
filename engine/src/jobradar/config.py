@@ -143,7 +143,8 @@ class MatchingConfig(BaseModel):
     promote_percentile: int = Field(50, ge=5, le=95)  # the bar: semantic score above this share of keyword matches
     promote_min_similarity: float = Field(0.0, ge=0, le=1)  # > 0: a fixed bar instead of the measured one
     promote_max_per_run: int = Field(5, ge=0, le=200)
-    max_seconds_per_run: int = Field(180, ge=10, le=3600)   # time a scan may spend on embedding new postings
+    # time a scan may spend on embedding new postings (a quick scan: a third of it)
+    max_seconds_per_run: int = Field(180, ge=10, le=3600)
 
 
 class AnthropicConfig(BaseModel):
