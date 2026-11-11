@@ -546,6 +546,19 @@ def test_a_scan_matches_before_it_evaluates_and_survives_a_missing_model(cfg, pr
     assert db.get_meta(conn, "last_cycle")
 
 
+def test_a_quick_scan_gives_matching_a_third_of_the_time(cfg, profile, monkeypatch):
+    from jobradar import cli
+
+    seen = []
+    monkeypatch.setattr(match, "run_matching", lambda conn, cfg, profile, **kw: seen.append(kw["max_seconds"]))
+    conn = db.connect(cfg.db_path)
+    cli.matching_step(conn, cfg, profile, lambda m: None)                     # off: nothing runs
+    cfg.matching.enabled = True
+    cli.matching_step(conn, cfg, profile, lambda m: None)
+    cli.matching_step(conn, cfg, profile, lambda m: None, quick=True)
+    assert seen == [None, 60]                                                 # None = matching.max_seconds_per_run
+
+
 # ---------------------------------------------------------------------------
 # The real model (only where it may be downloaded: JOBRADAR_TEST_REAL_MODEL=1)
 # ---------------------------------------------------------------------------

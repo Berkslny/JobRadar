@@ -84,13 +84,19 @@ def _insert(conn: sqlite3.Connection, row: dict[str, Any]) -> None:
                  tuple(row.get(c) for c in _COLUMNS))
 
 
+def _busy(exc: sqlite3.Error) -> bool:
+    text = str(exc).lower()
+    return isinstance(exc, sqlite3.OperationalError) and ("locked" in text or "busy" in text)
+
+
 def _write(db_path: Path, rows: list[dict[str, Any]]) -> bool:
-    """Own short-lived connection; gives up quickly when another writer holds the database."""
+    """Own short-lived connection; gives up quickly when another writer holds the database.
+
+    False only when the database was busy: then the rows are worth keeping for the next call. Rows that fail
+    for any other reason would fail again, so they are given up (True)."""
+    conn = None
     try:
         conn = sqlite3.connect(str(db_path), timeout=BUSY_SECONDS)
-    except sqlite3.Error:
-        return False
-    try:
         try:
             for row in rows:
                 _insert(conn, row)
@@ -105,10 +111,11 @@ def _write(db_path: Path, rows: list[dict[str, Any]]) -> bool:
                 _insert(conn, row)
         conn.commit()
         return True
-    except sqlite3.Error:
-        return False
+    except sqlite3.Error as exc:
+        return not _busy(exc)
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
 
 
 def record(db_path: Path, row: dict[str, Any]) -> None:
@@ -120,6 +127,13 @@ def record(db_path: Path, row: dict[str, Any]) -> None:
         else:
             _backlog.append((db_path, row))
             del _backlog[:-BACKLOG_MAX]
+
+
+def _record_quietly(db_path: Path, row: dict[str, Any]) -> None:
+    try:
+        record(db_path, row)
+    except Exception:  # noqa: BLE001 - the meter must never break a call to the model
+        pass
 
 
 def attach(llm: Any, db_path: Path) -> Any:
@@ -144,12 +158,16 @@ def attach(llm: Any, db_path: Path) -> Any:
                 row["model"] = llm.model_for(tier)
             except Exception:  # noqa: BLE001
                 pass
-            record(db_path, row)
+            _record_quietly(db_path, row)
             raise
-        inp, out, cost = normalize(res.usage)
-        row.update(model=res.model, provider=res.provider or row["provider"], output_chars=len(res.text or ""),
-                   seconds=round(time.monotonic() - started, 2), input_tokens=inp, output_tokens=out, cost_usd=cost)
-        record(db_path, row)
+        try:
+            inp, out, cost = normalize(res.usage)
+            row.update(model=str(res.model or ""), provider=str(res.provider or row["provider"]),
+                       output_chars=len(res.text or ""), seconds=round(time.monotonic() - started, 2),
+                       input_tokens=inp, output_tokens=out, cost_usd=cost)
+        except Exception:  # noqa: BLE001 - an answer of an unusual shape is still an answer
+            row["seconds"] = round(time.monotonic() - started, 2)
+        _record_quietly(db_path, row)
         return res
 
     llm._usage_inner = inner

@@ -111,15 +111,17 @@ def mail_sync_step(conn, cfg: AppConfig, log=log) -> None:
         log(f"→ E-posta: {len(res.new)} yeni yanıt, {res.pending} tanesi onay bekliyor")
 
 
-def matching_step(conn, cfg: AppConfig, profile: Profile, log=log, progress=None) -> None:
+def matching_step(conn, cfg: AppConfig, profile: Profile, log=log, progress=None, *, quick: bool = False) -> None:
     """Semantic scores and promotions for what the scan brought. Never breaks the cycle."""
     if not cfg.matching.enabled:
         return
     from jobradar.scoring import match
     from jobradar.scoring.embed import EmbedError
 
+    # a quick scan stays quick: a backlog of postings without a score is worked off by the full scans
+    budget = max(10, cfg.matching.max_seconds_per_run // 3) if quick else None
     try:
-        match.run_matching(conn, cfg, profile, log=log, progress=progress)
+        match.run_matching(conn, cfg, profile, log=log, progress=progress, max_seconds=budget)
     except EmbedError as exc:
         conn.rollback()
         log(f"[yellow]Eşleştirme atlandı: {exc}[/yellow]")
@@ -173,7 +175,7 @@ def _run_cycle_locked(cfg: AppConfig, *, log=log, use_llm: bool = True, notify: 
             log(f"→ gelen kutusu: {n} yeni ilan")
             progress.new_jobs += n
         enrich_pending(conn, cfg, profile, client=client, log=log, progress=progress.on_enrich)
-        matching_step(conn, cfg, profile, log, progress.on_match)
+        matching_step(conn, cfg, profile, log, progress.on_match, quick=quick)
         llm = None
         if use_llm:
             try:
@@ -507,6 +509,10 @@ def _pct(value) -> str:
     return "–" if value is None else f"%{value * 100:.0f}"
 
 
+def _thousands(value: int) -> str:
+    return f"{int(value):,}".replace(",", ".")
+
+
 @app.command("bench")
 def bench_cmd(config: Optional[Path] = ConfigOpt, days: int = typer.Option(30, help="Model kullanımı: son kaç gün"),
               explicit: bool = typer.Option(False, "--explicit", help="Sadece elle verdiğin etiketleri kullan"),
@@ -565,7 +571,7 @@ def bench_cmd(config: Optional[Path] = ConfigOpt, days: int = typer.Option(30, h
     if u["calls"]:
         cost = f" · API karşılığı ${u['cost_usd']:.2f}" if u["cost_usd"] is not None else ""
         console.print(f"[bold]Model kullanımı[/bold] (son {u['days']} gün): {u['calls']} çağrı, {u['failed']} hata, "
-                      f"{u['input_tokens']:,} giriş + {u['output_tokens']:,} çıkış token{cost}".replace(",", "."))
+                      f"{_thousands(u['input_tokens'])} giriş + {_thousands(u['output_tokens'])} çıkış token{cost}")
         for row in u["by_purpose"]:
             avg = "" if row["avg_input_tokens"] is None else \
                 f"ortalama {row['avg_input_tokens']} giriş / {row['avg_output_tokens']} çıkış token, "

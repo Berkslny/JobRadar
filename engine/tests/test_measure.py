@@ -19,6 +19,7 @@ from jobradar.pipeline import evaluate_pending, import_raws
 from jobradar.scoring import bench, usage
 from jobradar.scoring.fake import FakeLLM
 from jobradar.scoring.llm import BaseLLM, LLMError, LLMResult, OpenAICompatLLM, get_llm
+from jobradar.textutil import now_iso
 from jobradar.web.app import create_app
 
 DESC = ("Ihre Aufgaben\n• Entwicklung von FPGA-Designs in VHDL für Bildverarbeitung\n• Zynq SoC Integration\n"
@@ -223,6 +224,13 @@ def test_bench_and_label_commands(workspace, profile):
     assert res.exit_code == 0, res.output
     assert "24 ilan" in res.output and "Sıralamalar" in res.output and "kappa 0.35" in res.output
     assert "~2.6" in res.output and "en az 30 karar" in res.output
+    assert "henüz kayıt yok" in res.output
+    # the time of the call is the real one: the summary covers the last 30 days
+    usage.record(cfg.db_path, {"ts": now_iso(), "provider": "p", "model": "m", "tier": "fast", "purpose": "evaluate",
+                               "ok": 1, "error": "", "seconds": 2.0, "prompt_chars": 5000, "output_chars": 300,
+                               "input_tokens": 1234, "output_tokens": 56})
+    text = " ".join(runner.invoke(cli_app, ["bench", *args]).output.split())
+    assert "1 çağrı, 0 hata, 1.234 giriş + 56 çıkış token" in text
     data = json.loads(runner.invoke(cli_app, ["bench", "--json", "--explicit", *args]).output)
     assert data["labels"]["total"] == 19 and data["explicit_only"] is True
     res = runner.invoke(cli_app, ["match", "--status", *args])
@@ -337,6 +345,19 @@ def test_get_llm_records_and_a_busy_database_never_blocks_a_call(cfg, monkeypatc
     holder.close()
     llm.complete("system", "user")
     assert len(calls(cfg)) == 3
+
+
+def test_a_record_that_cannot_be_stored_never_breaks_a_call_or_the_records_after_it(cfg, tmp_path):
+    row = {"ts": NOW, "provider": "p", "model": "m", "tier": "fast", "purpose": "other", "ok": 1, "error": "",
+           "seconds": 0.1, "prompt_chars": 1, "output_chars": 1}
+    db.connect(cfg.db_path).close()
+    usage.record(cfg.db_path, {**row, "model": object()})        # SQLite cannot store this value
+    usage.record(cfg.db_path, row)
+    assert [r["model"] for r in calls(cfg)] == ["m"]             # given up, and nothing waits behind it
+    # a place where no database can be: the call itself still returns its answer
+    llm = usage.attach(FakeLLM(), tmp_path / "missing" / "folder" / "jobradar.db")
+    assert llm.complete("system", "TASK: EVALUATE\nuser").text
+    assert not [p for p, _ in usage._backlog if p.parent.name == "folder"]
 
 
 def test_databases_of_earlier_versions_get_the_new_tables(tmp_path):
