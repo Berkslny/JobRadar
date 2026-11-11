@@ -18,6 +18,14 @@ Türkçe: [README.tr.md](README.tr.md)
   check of the PDF catch mistakes. Nothing is sent anywhere; you apply yourself.
 - **Keeps track** of your applications, reminds you to follow up, and can spot replies from companies in
   your mailbox (read-only).
+- **Matches by meaning, if you turn it on.** *Smart matching* (Settings > Matching) compares every posting
+  with your search tracks and your profile, using a small embedding model that runs on your Mac. The AI
+  model then sees first the postings that keywords and meaning agree on, and a posting your keywords would
+  miss can still reach you. The rules you set yourself always hold.
+- **Measures itself on your verdicts.** The status page shows how many of the postings ranked first are
+  ones you want, how many wanted postings never reach the AI model, how often the AI model judges like
+  you, and what the model calls add up to. *Judge jobs…* asks you about a random sample to make these
+  numbers honest.
 - **Speaks English and Turkish**, follows the light or dark look of your Mac, and uses Liquid Glass.
 - **Lets you look first.** *Look around with sample data* opens the app with made-up jobs and a made-up
   profile, without an AI model or a scan.
@@ -52,7 +60,8 @@ Everything is in one folder on your Mac, by default `~/Library/Application Suppo
 your profile (`data/profile.yaml`), settings, the job database and the generated documents. You can choose
 another folder in **Settings > Engine and data**. API keys and the e-mail app password are kept in the
 macOS Keychain, never in a file. Requests leave the Mac only for the job boards, for the AI model you
-connected, and for your own mailbox.
+connected, and for your own mailbox. With smart matching turned on, its model (about 220 MB) is downloaded
+once from Hugging Face; the comparison itself happens on your Mac.
 
 If an earlier JobRadar (the command line version) left its data in `~/projects/jobradar`, the app offers to
 bring it over: profile, jobs, documents and settings are copied into the folder above, and the earlier
@@ -104,8 +113,10 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | The disk image of the current version. |
 | `tools/` | Translation table and checks. |
+| `.github/workflows/ci.yml` | Checks on every push: engine tests, a build of the app, smart matching with the real model. |
 
-After changing the engine: `scripts/build-engine.command`, then build the app again.
+After changing the engine: `scripts/build-engine.command`, then build the app again
+(`python3 tools/check_wheel.py` tells you when that was forgotten).
 Engine tests: `cd engine && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .venv/bin/pytest`.
 After changing interface texts: add the Turkish text to `tools/tr_table.py` and run `python3 tools/l10n.py write`.
 

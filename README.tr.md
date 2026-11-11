@@ -19,6 +19,14 @@ English: [README.md](README.md)
   kontrolü hataları yakalar. Hiçbir yere bir şey gönderilmez; başvuruyu sen yaparsın.
 - **Başvurularını takip eder,** takip zamanını hatırlatır ve posta kutundaki şirket yanıtlarını fark edebilir
   (salt okunur).
+- **İstersen anlama göre eşleştirir.** *Akıllı eşleştirme* (Ayarlar > Eşleştirme) her ilanı arama alanların
+  ve profilinle, Mac'inde çalışan küçük bir embedding modeliyle karşılaştırır. Yapay zeka modeli önce anahtar
+  kelimelerin ve anlamın birlikte işaret ettiği ilanları görür; anahtar kelimelerinin kaçıracağı bir ilan da
+  sana ulaşabilir. Kendi koyduğun kurallar her zaman geçerlidir.
+- **Kendini senin kararlarınla ölçer.** Durum sayfası, öne sıralanan ilanların kaçının istediğin ilanlar
+  olduğunu, istediğin kaç ilanın yapay zeka modeline hiç ulaşmadığını, modelin ne sıklıkla senin gibi karar
+  verdiğini ve model çağrılarının toplamını gösterir. *İlanlara karar ver…* bu sayıların dürüst olması için
+  sana rastgele bir örneklem sorar.
 - **Türkçe ve İngilizce** çalışır, Mac'inin açık ya da koyu görünümüne uyar ve Liquid Glass kullanır.
 - **Önce göz atabilirsin.** *Örnek verilerle göz at* uygulamayı uydurma ilanlar ve uydurma bir profille
   açar; yapay zeka modeli ya da tarama gerekmez.
@@ -54,6 +62,8 @@ Her şey Mac'indeki tek bir klasörde durur; varsayılan yer
 veritabanın ve üretilen belgeler. **Ayarlar > Motor ve veriler** bölümünden başka bir klasör seçebilirsin.
 API anahtarları ve e-posta uygulama şifresi macOS Anahtar Zinciri'nde tutulur, hiçbir dosyaya yazılmaz.
 Mac'inden yalnızca ilan sitelerine, bağladığın yapay zeka modeline ve kendi posta kutuna istek gider.
+Akıllı eşleştirmeyi açarsan modeli (yaklaşık 220 MB) bir kez Hugging Face'ten indirilir; karşılaştırmanın
+kendisi Mac'inde yapılır.
 
 Önceki bir JobRadar (komut satırı sürümü) verilerini `~/projects/jobradar` klasöründe bıraktıysa uygulama
 bunları aktarmayı önerir: profil, ilanlar, belgeler ve ayarlar yukarıdaki klasöre kopyalanır, önceki klasör
@@ -106,8 +116,10 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | Güncel sürümün disk görüntüsü. |
 | `tools/` | Çeviri tablosu ve kontroller. |
+| `.github/workflows/ci.yml` | Her gönderimde kontroller: motor testleri, uygulamanın derlenmesi, gerçek modelle akıllı eşleştirme. |
 
-Motoru değiştirdikten sonra: `scripts/build-engine.command`, ardından uygulamayı yeniden derle.
+Motoru değiştirdikten sonra: `scripts/build-engine.command`, ardından uygulamayı yeniden derle
+(unutulduğunda `python3 tools/check_wheel.py` söyler).
 Motor testleri: `cd engine && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .venv/bin/pytest`.
 Arayüz metni değiştirdikten sonra: Türkçesini `tools/tr_table.py` dosyasına ekle ve
 `python3 tools/l10n.py write` komutunu çalıştır.
