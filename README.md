@@ -113,7 +113,7 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | The disk image of the current version. |
 | `tools/` | Translation table and checks. |
-| `.github/workflows/ci.yml` | Checks on every push: engine tests, a build of the app, smart matching with the real model. |
+| `.github/workflows/ci.yml` | Checks on every pull request and every push to main: engine tests, a build of the app, smart matching with the real model. |
 
 After changing the engine: `scripts/build-engine.command`, then build the app again
 (`python3 tools/check_wheel.py` tells you when that was forgotten).

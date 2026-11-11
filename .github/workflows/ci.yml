@@ -1,9 +1,11 @@
-# Checks every push: the engine's tests on Linux, a build of the Mac app, and smart matching with the real
-# embedding model on Linux and on an Apple Silicon Mac. Nothing is signed, published or deployed here.
+# Checks every pull request and every push to main: the engine's tests on Linux, a build of the Mac app, and
+# smart matching with the real embedding model on Linux and on an Apple Silicon Mac. Nothing is signed,
+# published or deployed here.
 name: CI
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -16,8 +18,6 @@ concurrency:
 jobs:
   engine:
     name: Engine tests
-    # a pull request from a branch of this repository is already covered by its pushes
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -35,7 +35,6 @@ jobs:
 
   app:
     name: Build the Mac app
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v5
@@ -59,7 +58,6 @@ jobs:
 
   matching:
     name: Smart matching with the real model (${{ matrix.os }})
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

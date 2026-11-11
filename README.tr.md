@@ -116,7 +116,7 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | Güncel sürümün disk görüntüsü. |
 | `tools/` | Çeviri tablosu ve kontroller. |
-| `.github/workflows/ci.yml` | Her gönderimde kontroller: motor testleri, uygulamanın derlenmesi, gerçek modelle akıllı eşleştirme. |
+| `.github/workflows/ci.yml` | Her pull request'te ve main'e her gönderimde kontroller: motor testleri, uygulamanın derlenmesi, gerçek modelle akıllı eşleştirme. |
 
 Motoru değiştirdikten sonra: `scripts/build-engine.command`, ardından uygulamayı yeniden derle
 (unutulduğunda `python3 tools/check_wheel.py` söyler).
