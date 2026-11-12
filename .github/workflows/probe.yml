@@ -1,0 +1,34 @@
+# Scratch workflow of the probe branch only (never merged): looks at what the Mac runner allows.
+name: Probe
+
+on:
+  push:
+    branches: ['probe/**']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: probe-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  probe:
+    name: Probe the Mac runner
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run the probe
+        run: bash tools/probe/probe.sh
+      - name: Publish what the probe wrote
+        if: always()
+        run: bash tools/probe/publish.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-output
+          path: ${{ runner.temp }}/out
+          if-no-files-found: warn
