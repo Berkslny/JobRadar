@@ -1,0 +1,160 @@
+disk image under test: JobRadar-1.1.dmg sha256 8233e659482a6df571720775a6222f64588bda5927af44331dee49ef72fcbf58
+
+=== tools and display (02:28:40) ===
+set 1920x1080: ok
+current 1920x1080 pixels 1920x1080
+
+=== 1.0: install and first start (02:29:12) ===
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+installed 1.0 from JobRadar-1.0.dmg
+signature valid
+engine listening after about 10 s
+job boards added
+summary-10-empty.json: 882 bytes
+engine 1.0.0 features None
+engine stopped
+
+=== 1.0: a workspace with jobs, made by the 1.0 engine (02:29:40) ===
+Demo: 10 ilan, 9 kayıt, 1 birleşti, 3 elendi
+Demo klasörü: /Users/runner/Library/Application Support/JobRadar/workspace
+seed: found 57, new 57, merged 0, filtered 21
+an engine without verdicts: postings only
+accepted  27 postings · status ['new'] · quick score 29 to 94
+low        8 postings · status ['new'] · quick score 8 to 12
+hidden     8 postings · status ['filtered'] · quick score 6 to 24
+unrelated 10 postings · status ['filtered', 'new'] · quick score 0 to 18
+seeded with engine 1.0.0
+contacts documents evaluations events job_urls jobs mail_signals meta notifications source_runs sqlite_sequence 
+applied|1 filtered|24 new|36 shortlisted|2 skipped|2 tailored|1 
+
+=== 1.0: the app with that data (02:29:50) ===
+engine listening after about 4 s
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+shot 01-v10-inbox
+summary-10.json: 1109 bytes
+jobs-10.json: 41728 bytes
+first posting: 146ddd1498f5
+engine stopped
+
+=== 1.1: install over it (02:30:03) ===
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+installed 1.1 from JobRadar-1.1.dmg
+signature valid
+engine listening after about 4 s
+engine up 2 s after opening the new version
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+{
+  "job_boards" : true,
+  "job_boards_error" : "",
+  "matching" : false,
+  "matching_error" : "",
+  "uv" : "0.13.7",
+  "wheel" : "28ae4baf376b137b1321eb9621bf54eced8bfa6b6eb4bf317281ca47f2a08e4e"
+}
+shot 02-v11-inbox
+summary-11.json: 1175 bytes
+jobs-11.json: 41728 bytes
+bench-11.json: 1221 bytes
+matching-11.json: 956 bytes
+contacts documents embeddings evaluations events job_match job_urls jobs labels llm_calls mail_signals meta notifications source_runs sqlite_sequence 
+applied|1 filtered|24 new|36 shortlisted|2 skipped|2 tailored|1 
+engine 1.0.0 -> 1.1.0 · features ['labels', 'bench', 'matching']
+counts equal: True · views equal: True
+postings: 66 -> 66 · same ids, statuses and scores: True
+bench labels: {'total': 6, 'explicit': 0, 'from_status': 6, 'good': 4, 'maybe': 0, 'bad': 2, 'needed': 30, 'enough': False} · groups: [('evaluated', 17), ('queue', 12), ('low_score', 11), ('track_filtered', 16)]
+matching enabled: False · installed: False · scored: 0
+the database holds the same postings
+
+=== 1.1: the new screens work on the old data (02:30:15) ===
+clicked at 510,600
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (420,161 1080x732)
+found after 0 s: yes: How well JobRadar finds your jobs
+shot 03-v11-status
+revealed: Judge jobs…
+pressed
+found after 0 s: yes: Does this job fit you?
+shot 04-v11-judge
+yes: 2 judged · 50 to go
+pressed
+pressed
+found after 9 s: yes: The model works: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 answered in 6.0 seconds.
+{
+  "job_boards" : true,
+  "job_boards_error" : "",
+  "matching" : true,
+  "matching_error" : "",
+  "uv" : "0.13.7",
+  "wheel" : "28ae4baf376b137b1321eb9621bf54eced8bfa6b6eb4bf317281ca47f2a08e4e"
+}
+revealed: Compare my jobs now
+pressed
+found after 16 s: yes: 58 jobs compared, 3 let through.
+shot 05-v11-matching
+matching-11-after.json: 970 bytes
+scored 58 promoted 3 threshold 0.5371
+engine stopped
+
+=== the new app with an engine of 1.0 on a server (02:31:03) ===
+server engine 1.0.0
+old server answers: version 1.0.0 features None
+engine listening after about 4 s
+AXWindow[AXStandardWindow] "Inbox – 41 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+pressed
+pressed
+clicked at 989,481
+clicked at 986,518
+shot 06-remote-settings-filled
+pressed
+found after 0 s: yes: Connected. Server 1.0.0, 38 jobs in the inbox, AI model: none.
+shot 07-remote-settings-tested
+pressed
+AXWindow[AXStandardWindow] "Engine and data ¦ com_apple_SwiftUI_Settings_window" (610,192 700x728)
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+screen remote-applied
+engine of this Mac running: 0 (0 expected)
+remote
+http://127.0.0.1:8795
+the key is in the keychain
+pressed
+shot 09-remote-matching
+yes: This engine is older than the app and has no smart matching yet.
+clicked at 470,248
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+shot 10-remote-inbox
+shot 11-remote-posting
+verdict menu on the posting: 0 (0 expected: the server cannot store verdicts)
+clicked at 510,600
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (420,161 1080x732)
+shot 12-remote-status
+yes: Engine status
+no
+no measurements with this server (expected)
+5324 /Users/runner/work/_temp/venv10/bin/python -m jobradar serve --no-open --host 127.0.0.1 --port 8795 --workspace /Users/runner/work/_temp/ws10
+
+=== the same after a restart, and with another build of the app reading the stored key (02:32:07) ===
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+screen remote-restart
+5324 /Users/runner/work/_temp/venv10/bin/python -m jobradar serve --no-open --host 127.0.0.1 --port 8795 --workspace /Users/runner/work/_temp/ws10
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+installed 1.0 from JobRadar-1.0.dmg
+signature valid
+screen other-build-reads-key
+118	1000	743	248	434	186	
+24:    1400 Thread_28035   DispatchQueue_1: com.apple.main-thread  (serial)
+83:    +                                                                                                                     1400 specialized static Keychain.ge
+84:    +                                                                                                                       1400 SecItemCopyMatching  (in Sec
+85:    +                                                                                                                         1400 SecItemCopyMatching_osx(__
+86:    +                                                                                                                           1400 AddItemResults(__SecKeyc
+87:    +                                                                                                                             1400 SecKeychainItemCopyCon
+88:    +                                                                                                                               1400 Security::KeychainCo
+89:    +                                                                                                                                 1400 Security::Keychain
+97:    +                                                                                                                                                 1400 ma
+98:    +                                                                                                                                                   1400 
+99:    +                                                                                                                                                     140
+100:    +                                                                                                                                                       
+Panel: http://127.0.0.1:8795  (durdurmak için Ctrl+C)
+
+=== end (02:32:49) ===
+upgrade walk finished
+tools/probe/upgrade.sh: line 120:  5324 Terminated: 15          JOBRADAR_API_TOKEN=probe-token JOBRADAR_LANG=en "$RUNNER_TEMP/venv10/bin/python" -m jobradar serve --no-open --host 127.0.0.1 --port 8795 --workspace "$RUNNER_TEMP/ws10" > "$OUT/engine-old-server.log" 2>&1
