@@ -73,3 +73,20 @@ jobs:
       - name: Publish what was written
         if: always()
         run: bash tools/probe/publish.sh upgrade
+
+  intel:
+    name: The Intel half of the app, through Rosetta
+    needs: dmg
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: dmg
+          path: ${{ runner.temp }}/dmg
+      - name: Run the Intel walk
+        run: bash tools/probe/intel.sh
+      - name: Publish what was written
+        if: always()
+        run: bash tools/probe/publish.sh intel

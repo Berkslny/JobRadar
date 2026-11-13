@@ -76,7 +76,8 @@ api() {  # api PATH FILE
 }
 
 start_app() {
-  open -n "$APP"
+  # shellcheck disable=SC2086
+  open -n ${OPEN_ARGS:-} "$APP"
   wait_engine "$1"
   sleep 6
   osascript -e 'tell application "JobRadar" to activate' 2>&1
