@@ -1,4 +1,5 @@
-# Scratch workflow of the probe branch only (never merged): looks at what the Mac runner allows.
+# Scratch workflow of the probe branch only (never merged): builds the disk image on a Mac runner,
+# then installs it and walks through the app, once fresh and once over a 1.0 installation with data.
 name: Probe
 
 on:
@@ -12,23 +13,63 @@ concurrency:
   group: probe-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
-  probe:
-    name: Probe the Mac runner
+  dmg:
+    name: Build the disk image
     runs-on: xcode-27
-    timeout-minutes: 40
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      - name: Build and inspect
+        run: bash tools/probe/dmg.sh
+      - name: Publish what was written
+        if: always()
+        run: bash tools/probe/publish.sh dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dmg
+          path: ${{ runner.temp }}/dmg/*.dmg
+          if-no-files-found: error
+
+  tour:
+    name: Walk through the installed app
+    needs: dmg
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: dmg
+          path: ${{ runner.temp }}/dmg
       - name: Run the tour
         run: bash tools/probe/tour.sh
-      - name: Publish what the probe wrote
+      - name: Publish what was written
         if: always()
-        run: bash tools/probe/publish.sh
-      - uses: actions/upload-artifact@v4
-        if: always()
+        run: bash tools/probe/publish.sh tour
+
+  upgrade:
+    name: Update a 1.0 installation that has data
+    needs: dmg
+    runs-on: xcode-27
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
         with:
-          name: probe-output
-          path: ${{ runner.temp }}/out
-          if-no-files-found: warn
+          name: dmg
+          path: ${{ runner.temp }}/dmg
+      - name: Get the 1.0 disk image from main
+        run: |
+          git fetch -q --depth 1 origin main
+          mkdir -p "$RUNNER_TEMP/old"
+          git show FETCH_HEAD:downloads/JobRadar-1.0.dmg > "$RUNNER_TEMP/old/JobRadar-1.0.dmg"
+          ls -l "$RUNNER_TEMP/old"
+      - name: Run the upgrade walk
+        run: bash tools/probe/upgrade.sh
+      - name: Publish what was written
+        if: always()
+        run: bash tools/probe/publish.sh upgrade

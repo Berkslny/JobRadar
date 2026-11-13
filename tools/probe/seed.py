@@ -21,8 +21,12 @@ from jobradar.demo import build_demo
 from jobradar.models import RawJob
 from jobradar.pipeline import evaluate_pending, import_raws
 from jobradar.profile import load_profile
-from jobradar.scoring import bench
 from jobradar.scoring.fake import FakeLLM
+
+try:
+    from jobradar.scoring import bench      # 1.1 and later: your own verdicts and the measurements
+except ImportError:
+    bench = None
 
 
 def days(n: int) -> str:
@@ -273,7 +277,7 @@ def main(folder: str) -> None:
             print("merged away:", p["title"])
             continue
         p["row"] = row
-        if p["kind"] in JUDGED and judged[p["kind"]] < JUDGED[p["kind"]]:
+        if bench is not None and p["kind"] in JUDGED and judged[p["kind"]] < JUDGED[p["kind"]]:
             bench.set_label(conn, row["id"], LABEL[p["want"]], "")
             judged[p["kind"]] += 1
     # what the user did with a posting counts as a verdict too
@@ -283,11 +287,14 @@ def main(folder: str) -> None:
         db.set_status(conn, job_id, status, "seed")
     conn.commit()
 
-    report = bench.report(conn, cfg, profile)
-    print("labels:", report["labels"])
-    for g in report["gate"]["groups"]:
-        print("group %-15s total %3d judged %2d wanted %s" % (g["id"], g["postings"], g["judged"], g["wanted"]))
-    print("rankings on", report["rankings"]["n"], "postings; estimated missed:", report["gate"]["estimated_missed"])
+    if bench is not None:
+        report = bench.report(conn, cfg, profile)
+        print("labels:", report["labels"])
+        for g in report["gate"]["groups"]:
+            print("group %-15s total %3d judged %2d wanted %s" % (g["id"], g["postings"], g["judged"], g["wanted"]))
+        print("rankings on", report["rankings"]["n"], "postings; estimated missed:", report["gate"]["estimated_missed"])
+    else:
+        print("an engine without verdicts: postings only")
     for kind in ("accepted", "low", "hidden", "unrelated", "hard"):
         rows = [p["row"] for p in POSTINGS if p["kind"] == kind and p.get("row")]
         print("%-9s %2d postings · status %s · quick score %s" % (

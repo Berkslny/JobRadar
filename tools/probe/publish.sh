@@ -9,7 +9,7 @@ git init -q
 git checkout -q -b out
 git add -A
 git -c user.name="probe" -c user.email="probe@users.noreply.github.com" commit -q -m "Probe output of run $GITHUB_RUN_ID" || true
-BRANCH="probe-out/${GITHUB_REF_NAME#probe/}"
+BRANCH="probe-out/${GITHUB_REF_NAME#probe/}${1:+-$1}"
 git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "out:refs/heads/$BRANCH"
 echo "pushed to $BRANCH"
 ls -la "$OUT" | head -60
