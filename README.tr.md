@@ -4,7 +4,7 @@ JobRadar senin için iş ilanı arayan, her ilanı gerçek CV'nle karşılaştı
 için dürüst başvuru belgeleri yazan bir Mac uygulamasıdır. Kendi Mac'inde, senin bağladığın yapay zeka
 modeliyle çalışır.
 
-**İndir:** [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) (macOS 26 ya da üstü)
+**İndir:** [JobRadar-1.1.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.1.dmg) (macOS 26 ya da üstü)
 
 English: [README.md](README.md)
 
@@ -19,6 +19,14 @@ English: [README.md](README.md)
   kontrolü hataları yakalar. Hiçbir yere bir şey gönderilmez; başvuruyu sen yaparsın.
 - **Başvurularını takip eder,** takip zamanını hatırlatır ve posta kutundaki şirket yanıtlarını fark edebilir
   (salt okunur).
+- **İstersen anlama göre eşleştirir.** *Akıllı eşleştirme* (Ayarlar > Eşleştirme) her ilanı arama alanların
+  ve profilinle, Mac'inde çalışan küçük bir embedding modeliyle karşılaştırır. Yapay zeka modeli önce anahtar
+  kelimelerin ve anlamın birlikte işaret ettiği ilanları görür; anahtar kelimelerinin kaçıracağı bir ilan da
+  sana ulaşabilir. Kendi koyduğun kurallar her zaman geçerlidir.
+- **Kendini senin kararlarınla ölçer.** Durum sayfası, öne sıralanan ilanların kaçının istediğin ilanlar
+  olduğunu, istediğin kaç ilanın yapay zeka modeline hiç ulaşmadığını, modelin ne sıklıkla senin gibi karar
+  verdiğini ve model çağrılarının toplamını gösterir. *İlanlara karar ver…* bu sayıların dürüst olması için
+  sana rastgele bir örneklem sorar.
 - **Türkçe ve İngilizce** çalışır, Mac'inin açık ya da koyu görünümüne uyar ve Liquid Glass kullanır.
 - **Önce göz atabilirsin.** *Örnek verilerle göz at* uygulamayı uydurma ilanlar ve uydurma bir profille
   açar; yapay zeka modeli ya da tarama gerekmez.
@@ -38,7 +46,7 @@ English: [README.md](README.md)
 
 ## Kurulum
 
-1. [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) dosyasını indir, aç ve JobRadar'ı Uygulamalar klasörüne sürükle.
+1. [JobRadar-1.1.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.1.dmg) dosyasını indir, aç ve JobRadar'ı Uygulamalar klasörüne sürükle.
 2. JobRadar'ı aç. İndirilen sürüm Apple onayından (notarization) geçmediği için macOS ilk seferde
    açmayı reddeder. O mesajı kapat, **Sistem Ayarları > Gizlilik ve Güvenlik** bölümünde aşağı inip
    JobRadar ile ilgili satırda **Yine de Aç**'ı seç ve onayla. Bu yalnızca bir kez gerekir.
@@ -47,6 +55,14 @@ English: [README.md](README.md)
 
 Uygulama açıkken menü çubuğunda durur ve 08:00, 13:00, 19:00'da tarama yapar.
 
+**Önceki sürümden güncelleme.** JobRadar'dan çık (menü çubuğu penceresindeki düğme), yeni disk görüntüsünü
+indir ve JobRadar'ı yeniden Uygulamalar klasörüne sürükleyip eskisinin yerine koy. Verilerin olduğu yerde
+kalır. Yeni sürüm ilk açılışta motorunu günceller; macOS da her indirmeyi yeni bir uygulama saydığı için
+bir kez daha **Yine de Aç** ister. Aynı nedenle, JobRadar senin için bir gizli bilgi saklıyorsa (API
+anahtarı, e-posta uygulama şifresi, sunucunun anahtarı) macOS yeni kopyanın onu okuyabilmesi için oturum
+şifreni sorar. **Her Zaman İzin Ver**'i seç; her gizli bilgi için bir kez sorar ve JobRadar sen
+yanıtladıktan sonra devam eder.
+
 ## Verilerin nerede
 
 Her şey Mac'indeki tek bir klasörde durur; varsayılan yer
@@ -54,6 +70,8 @@ Her şey Mac'indeki tek bir klasörde durur; varsayılan yer
 veritabanın ve üretilen belgeler. **Ayarlar > Motor ve veriler** bölümünden başka bir klasör seçebilirsin.
 API anahtarları ve e-posta uygulama şifresi macOS Anahtar Zinciri'nde tutulur, hiçbir dosyaya yazılmaz.
 Mac'inden yalnızca ilan sitelerine, bağladığın yapay zeka modeline ve kendi posta kutuna istek gider.
+Akıllı eşleştirmeyi açarsan modeli (yaklaşık 220 MB) bir kez Hugging Face'ten indirilir; karşılaştırmanın
+kendisi Mac'inde yapılır.
 
 Önceki bir JobRadar (komut satırı sürümü) verilerini `~/projects/jobradar` klasöründe bıraktıysa uygulama
 bunları aktarmayı önerir: profil, ilanlar, belgeler ve ayarlar yukarıdaki klasöre kopyalanır, önceki klasör
@@ -101,19 +119,27 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | Yol | Ne |
 |---|---|
 | `JobRadar/` | Mac uygulaması (SwiftUI). `L10nTurkish.swift`, `tools/tr_table.py` dosyasından üretilir. |
-| `JobRadar/jobradar-1.0.0-py3-none-any.whl` | Uygulamanın taşıdığı motor paketi. |
+| `JobRadar/jobradar-1.1.0-py3-none-any.whl` | Uygulamanın taşıdığı motor paketi. |
 | `engine/` | Motorun kaynağı (Python): kaynaklar, puanlama, belge yazımı, yerel API. |
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | Güncel sürümün disk görüntüsü. |
 | `tools/` | Çeviri tablosu ve kontroller. |
+| `.github/workflows/ci.yml` | Her pull request'te ve main'e her gönderimde kontroller: motor testleri, uygulamanın derlenmesi, gerçek modelle akıllı eşleştirme. |
 
-Motoru değiştirdikten sonra: `scripts/build-engine.command`, ardından uygulamayı yeniden derle.
+Motoru değiştirdikten sonra: `scripts/build-engine.command`, ardından uygulamayı yeniden derle
+(unutulduğunda `python3 tools/check_wheel.py` söyler).
 Motor testleri: `cd engine && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .venv/bin/pytest`.
 Arayüz metni değiştirdikten sonra: Türkçesini `tools/tr_table.py` dosyasına ekle ve
 `python3 tools/l10n.py write` komutunu çalıştır.
 
 Motor uygulama olmadan da çalışabilir (`jobradar serve`, `jobradar run`); komut satırı ve isteğe bağlı web
 paneli şimdilik Türkçedir.
+
+## Sürümler
+
+- **1.1**: akıllı eşleştirme (Ayarlar > Eşleştirme; sen açana kadar kapalı) ve kendi kararlarınla ölçüm
+  (durum sayfası).
+- **1.0**: ilk sürüm.
 
 ## İlan sitelerinin adil kullanımı
 

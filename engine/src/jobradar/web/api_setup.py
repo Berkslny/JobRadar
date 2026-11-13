@@ -20,9 +20,11 @@ from pydantic import BaseModel, ValidationError
 from jobradar import __version__, db, i18n, profile_tools, searchsetup, settings
 from jobradar.config import AppConfig
 from jobradar.i18n import t
+from jobradar.scoring import usage
 from jobradar.scoring.llm import BaseLLM, LLMError, cost_label, is_local_url, llm_hint
 
 PROVIDERS = ("claude_cli", "anthropic", "openai", "ollama", "none")
+MATCH_PROVIDERS = ("fastembed", "ollama", "openai")
 CLAUDE_MODELS = ["haiku", "sonnet", "opus"]
 _claude_cache: dict[str, Any] = {"at": 0.0, "value": None}
 
@@ -47,6 +49,15 @@ class AIIn(BaseModel):
     smart_model: str = ""
     base_url: str = ""
     api_key: Optional[str] = None      # None: keep what is known, "": forget
+
+
+class MatchingIn(BaseModel):
+    enabled: Optional[bool] = None
+    provider: Optional[str] = None
+    model: Optional[str] = None        # "" = the provider's default
+    base_url: Optional[str] = None     # "" = the address of the AI model settings
+    promote: Optional[bool] = None
+    promote_max_per_run: Optional[int] = None
 
 
 class ProfileIn(BaseModel):
@@ -177,6 +188,35 @@ def list_models(cfg: AppConfig, provider: str, base_url: str = "") -> list[str]:
         items = []
     names = [str(m.get("id") or m.get("name") or "").removeprefix("models/") for m in items if isinstance(m, dict)]
     return sorted(n for n in names if n)
+
+
+def matching_view(cfg: AppConfig, conn_factory: Callable[[], Any]) -> dict[str, Any]:
+    """Semantic matching: what is set, whether the model can run here, and what the last run did."""
+    from jobradar.scoring import embed, match
+
+    mc = cfg.matching
+    c = conn_factory()
+    try:
+        state = match.status(c, cfg)
+    finally:
+        c.close()
+    last = state["last_run"]
+    return {
+        "enabled": mc.enabled, "provider": mc.provider, "model": mc.model, "model_effective": embed.model_name(cfg),
+        "base_url": mc.base_url, "base_url_effective": embed.base_url(cfg) if mc.provider != "fastembed" else "",
+        "promote": mc.promote, "promote_max_per_run": mc.promote_max_per_run,
+        # the built-in provider needs the optional package; the others only an address
+        "installed": embed.fastembed_installed() if mc.provider == "fastembed" else True,
+        "scored": state["scored"], "promoted": state["promoted"], "last_error": state["last_error"],
+        "last_run": last.get("at", ""), "last_embedded": last.get("embedded"), "last_waiting": last.get("waiting"),
+        "last_promoted": last.get("promoted"), "threshold": last.get("threshold"),
+        # what the bar for promotions was measured on, and how much of each it needs
+        "last_reference": last.get("reference"), "last_background": last.get("background"),
+        "reference_needed": match.MIN_REFERENCE, "background_needed": match.MIN_BACKGROUND,
+        "providers": list(MATCH_PROVIDERS),
+        "models": [{"id": m["id"], "size_mb": m["size_mb"], "note": t(m["note"])} for m in embed.BUILTIN_MODELS],
+        "default_models": dict(embed.DEFAULT_MODELS),
+    }
 
 
 def mail_view(cfg: AppConfig, conn_factory: Callable[[], Any]) -> dict[str, Any]:
@@ -368,8 +408,10 @@ def build_setup_router(cfg: AppConfig, *, llm_factory: Callable[[AppConfig], Opt
         def work() -> dict[str, Any]:
             started = time.monotonic()
             try:
-                res = llm.complete("You are a connection test. Follow the instruction exactly.",
-                                   'Reply with a JSON object: {"ok": true}', tier=cfg.llm.eval_tier, max_tokens=200)
+                with usage.tagged(purpose="test"):
+                    res = llm.complete("You are a connection test. Follow the instruction exactly.",
+                                       'Reply with a JSON object: {"ok": true}', tier=cfg.llm.eval_tier,
+                                       max_tokens=200)
             except LLMError as exc:
                 raise RuntimeError(llm_hint(llm.provider, str(exc))) from exc
             if not res.text.strip():
@@ -378,6 +420,85 @@ def build_setup_router(cfg: AppConfig, *, llm_factory: Callable[[AppConfig], Opt
                     "seconds": round(time.monotonic() - started, 1), "message": t("Bağlantı çalışıyor.")}
 
         return tasks.start("ai_test", work)
+
+    # -- semantic matching -----------------------------------------------------------------------
+    @r.get("/matching")
+    def matching_get() -> dict[str, Any]:
+        return matching_view(cfg, conn)
+
+    @r.put("/matching")
+    def matching_put(body: MatchingIn) -> dict[str, Any]:
+        from jobradar.scoring import match
+
+        patch: dict[str, Any] = {}
+        if body.provider is not None:
+            provider = body.provider.strip().lower()
+            if provider not in MATCH_PROVIDERS:
+                raise HTTPException(422, t("Bilinmeyen sağlayıcı: {name}", name=body.provider))
+            patch["provider"] = provider
+        for key in ("enabled", "promote", "promote_max_per_run"):
+            value = getattr(body, key)
+            if value is not None:
+                patch[key] = value
+        if body.model is not None:
+            patch["model"] = body.model.strip()
+        if body.base_url is not None:
+            patch["base_url"] = body.base_url.strip().rstrip("/")
+        promoting = cfg.matching.enabled and cfg.matching.promote
+        if patch:
+            try:
+                settings.update(cfg, {"matching": patch})
+            except (ValidationError, ValueError) as exc:
+                raise _invalid(exc) from exc
+        if promoting and not (cfg.matching.enabled and cfg.matching.promote):
+            # turned off: postings it had let through go back to what the keyword rules say
+            prof = current_profile()
+            c = conn()
+            try:
+                match.clear_promotions(c, cfg, prof)
+            finally:
+                c.close()
+        return matching_view(cfg, conn)
+
+    @r.post("/matching/test", status_code=202)
+    def matching_test() -> dict[str, Any]:
+        """Load the embedding model and embed one short text. The first call of the built-in model downloads it."""
+        from jobradar.scoring import embed
+
+        def work() -> dict[str, Any]:
+            started = time.monotonic()
+            try:
+                size = embed.probe(embed.get_embedder(cfg))
+            except embed.EmbedError as exc:
+                raise RuntimeError(str(exc)) from exc
+            return {"ok": True, "provider": cfg.matching.provider, "model": embed.model_name(cfg), "dim": size,
+                    "seconds": round(time.monotonic() - started, 1), "message": t("Eşleştirme modeli çalışıyor.")}
+
+        return tasks.start("matching_test", work)
+
+    @r.post("/matching/run", status_code=202)
+    def matching_run() -> dict[str, Any]:
+        """Score the postings that are already there (a scan does the same for new ones)."""
+        from jobradar.locks import cycle_running
+        from jobradar.scoring import embed, match
+
+        if not cfg.matching.enabled:
+            raise HTTPException(409, t("Akıllı eşleştirme kapalı."))
+        if cycle_running(cfg.data_path):
+            raise HTTPException(409, t("Bir tarama çalışıyor; eşleştirme onun içinde yapılır."))
+        prof = current_profile()
+
+        def work() -> dict[str, Any]:
+            c = conn()
+            try:
+                return match.run_matching(c, cfg, prof, log=lambda m: None, max_seconds=1800).as_dict()
+            except embed.EmbedError as exc:
+                db.set_meta(c, match.META_ERROR, str(exc)[:300])
+                raise RuntimeError(str(exc)) from exc
+            finally:
+                c.close()
+
+        return tasks.start("matching_run", work)
 
     # -- profile ---------------------------------------------------------------------------------
     @r.get("/profile")

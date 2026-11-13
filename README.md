@@ -3,7 +3,7 @@
 JobRadar is a Mac app that looks for jobs for you, judges every posting against your real CV, and writes
 honest application documents for the ones you choose. It runs on your Mac, with the AI model you connect.
 
-**Download:** [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) (macOS 26 or later)
+**Download:** [JobRadar-1.1.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.1.dmg) (macOS 26 or later)
 
 Türkçe: [README.tr.md](README.tr.md)
 
@@ -18,6 +18,14 @@ Türkçe: [README.tr.md](README.tr.md)
   check of the PDF catch mistakes. Nothing is sent anywhere; you apply yourself.
 - **Keeps track** of your applications, reminds you to follow up, and can spot replies from companies in
   your mailbox (read-only).
+- **Matches by meaning, if you turn it on.** *Smart matching* (Settings > Matching) compares every posting
+  with your search tracks and your profile, using a small embedding model that runs on your Mac. The AI
+  model then sees first the postings that keywords and meaning agree on, and a posting your keywords would
+  miss can still reach you. The rules you set yourself always hold.
+- **Measures itself on your verdicts.** The status page shows how many of the postings ranked first are
+  ones you want, how many wanted postings never reach the AI model, how often the AI model judges like
+  you, and what the model calls add up to. *Judge jobs…* asks you about a random sample to make these
+  numbers honest.
 - **Speaks English and Turkish**, follows the light or dark look of your Mac, and uses Liquid Glass.
 - **Lets you look first.** *Look around with sample data* opens the app with made-up jobs and a made-up
   profile, without an AI model or a scan.
@@ -37,7 +45,7 @@ Türkçe: [README.tr.md](README.tr.md)
 
 ## Installing
 
-1. Download [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg), open it and drag JobRadar into Applications.
+1. Download [JobRadar-1.1.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.1.dmg), open it and drag JobRadar into Applications.
 2. Open JobRadar. The download is not notarised by Apple, so the first time macOS refuses to open it.
    Close that message, open **System Settings > Privacy & Security**, scroll down to the line about
    JobRadar, choose **Open Anyway** and confirm. This is needed once.
@@ -46,13 +54,22 @@ Türkçe: [README.tr.md](README.tr.md)
 
 The app stays in the menu bar while it is open and scans at 08:00, 13:00 and 19:00.
 
+**Updating from an earlier version.** Quit JobRadar (the button in its menu bar window), download the new
+disk image and drag JobRadar into Applications again, replacing the old copy. Your data stays where it is.
+On its first start the new version brings its engine up to date, and macOS asks once more for
+**Open Anyway**, because every download is a new app to it. For the same reason, when JobRadar keeps a
+secret for you (an API key, the e-mail app password, the key of your server), macOS asks for your login
+password before the new copy may read it. Choose **Always Allow**; it asks once per secret, and JobRadar
+goes on after you answered.
+
 ## Where your data lives
 
 Everything is in one folder on your Mac, by default `~/Library/Application Support/JobRadar/workspace`:
 your profile (`data/profile.yaml`), settings, the job database and the generated documents. You can choose
 another folder in **Settings > Engine and data**. API keys and the e-mail app password are kept in the
 macOS Keychain, never in a file. Requests leave the Mac only for the job boards, for the AI model you
-connected, and for your own mailbox.
+connected, and for your own mailbox. With smart matching turned on, its model (about 220 MB) is downloaded
+once from Hugging Face; the comparison itself happens on your Mac.
 
 If an earlier JobRadar (the command line version) left its data in `~/projects/jobradar`, the app offers to
 bring it over: profile, jobs, documents and settings are copied into the folder above, and the earlier
@@ -99,18 +116,26 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | Path | What |
 |---|---|
 | `JobRadar/` | The Mac app (SwiftUI). `L10nTurkish.swift` is generated from `tools/tr_table.py`. |
-| `JobRadar/jobradar-1.0.0-py3-none-any.whl` | The engine as the app carries it. |
+| `JobRadar/jobradar-1.1.0-py3-none-any.whl` | The engine as the app carries it. |
 | `engine/` | The engine's source (Python): sources, scoring, tailoring, the local API. |
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | The disk image of the current version. |
 | `tools/` | Translation table and checks. |
+| `.github/workflows/ci.yml` | Checks on every pull request and every push to main: engine tests, a build of the app, smart matching with the real model. |
 
-After changing the engine: `scripts/build-engine.command`, then build the app again.
+After changing the engine: `scripts/build-engine.command`, then build the app again
+(`python3 tools/check_wheel.py` tells you when that was forgotten).
 Engine tests: `cd engine && python3 -m venv .venv && .venv/bin/pip install -e ".[dev]" && .venv/bin/pytest`.
 After changing interface texts: add the Turkish text to `tools/tr_table.py` and run `python3 tools/l10n.py write`.
 
 The engine can also run without the app (`jobradar serve`, `jobradar run`); its command line and its
 optional web panel are in Turkish for now.
+
+## Versions
+
+- **1.1**: smart matching (Settings > Matching, off until you turn it on) and measurements on your own
+  verdicts (status page).
+- **1.0**: the first release.
 
 ## Fair use of job boards
 

@@ -346,6 +346,39 @@ final class APIClient {
         try await post("/api/v1/mail-settings/test")
     }
 
+    // MARK: Smart matching and measurements
+
+    func matching() async throws -> MatchingState {
+        try await get("/api/v1/matching")
+    }
+
+    func saveMatching(_ body: MatchingBody) async throws -> MatchingState {
+        try await send("PUT", "/api/v1/matching", body: body)
+    }
+
+    /// Loads the embedding model and embeds one text; the first call of the built-in model downloads it.
+    func testMatching() async throws -> TaskInfo {
+        try await post("/api/v1/matching/test")
+    }
+
+    /// Scores the postings that are already stored (a scan does the same for new ones).
+    func runMatching() async throws -> TaskInfo {
+        try await post("/api/v1/matching/run")
+    }
+
+    func bench() async throws -> BenchReport {
+        try await get("/api/v1/bench")
+    }
+
+    func labelQueue(limit: Int = 10) async throws -> LabelQueueResponse {
+        try await get("/api/v1/labels/queue", query: [URLQueryItem(name: "limit", value: String(limit))])
+    }
+
+    /// Your verdict on a posting: "good", "maybe", "bad", "skip" (cannot tell) or "" (take it back).
+    func setLabel(_ id: String, label: String) async throws {
+        let _: LabelResponse = try await send("PUT", "/api/v1/jobs/\(escape(id))/label", body: LabelBody(label: label))
+    }
+
     // MARK: Files
 
     /// Downloads a generated file into the app's temporary folder and returns its location.

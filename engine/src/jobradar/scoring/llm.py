@@ -341,6 +341,16 @@ def _ollama_up(base_url: str) -> bool:
 
 
 def get_llm(cfg: AppConfig) -> Optional[BaseLLM]:
+    """The configured model, or None. Its calls are recorded in the database (sizes and times, never texts)."""
+    llm = select_llm(cfg)
+    if llm is not None:
+        from jobradar.scoring import usage  # late: only this function touches the database
+
+        usage.attach(llm, cfg.db_path)
+    return llm
+
+
+def select_llm(cfg: AppConfig) -> Optional[BaseLLM]:
     lc = cfg.llm
     prov = lc.provider
     tmo = lc.timeout_seconds

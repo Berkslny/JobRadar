@@ -12,6 +12,8 @@ JobRadar was written from scratch. It uses ideas and documentation from the proj
 | [freehire.me API](https://freehire.me/jobs-api) | Terms of use | Reading without a key for personal, non-commercial use. Off by default. |
 | [uv](https://github.com/astral-sh/uv) | MIT / Apache-2.0 | Downloaded on first start to install Python and the libraries. |
 | [python-build-standalone](https://github.com/astral-sh/python-build-standalone) | MPL-2.0 and others | The Python that uv installs for the engine. |
+| [fastembed](https://github.com/qdrant/fastembed) | Apache-2.0 | Used as a library for smart matching (embedding models on ONNX Runtime). Installed only when smart matching is turned on. |
+| [paraphrase-multilingual-MiniLM-L12-v2](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2) | Apache-2.0 | The standard embedding model of smart matching. Downloaded from Hugging Face on first use. Other models can be chosen; each comes under its own licence. |
 
 Python libraries the engine installs on first start: httpx, pydantic, PyYAML, typer, rich, Jinja2, FastAPI,
 uvicorn, Beautiful Soup, python-multipart, pypdf (each under its own open-source licence).

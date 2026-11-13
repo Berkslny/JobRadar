@@ -17,8 +17,8 @@ from jobradar.config import AppConfig
 
 OVERLAY_NAME = "settings.json"
 # top-level keys a client may change; paths, ports and the server section stay in jobradar.yaml
-EDITABLE = ("language", "follow_up_days", "tracks", "search", "sources", "filters", "scoring", "llm", "notify",
-            "mail_sync", "tailor", "quick")
+EDITABLE = ("language", "follow_up_days", "tracks", "search", "sources", "filters", "scoring", "matching", "llm",
+            "notify", "mail_sync", "tailor", "quick")
 _lock = threading.Lock()
 
 

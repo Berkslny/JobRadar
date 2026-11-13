@@ -26,7 +26,8 @@ struct StatsView: View {
                         row(t("Profile"), s.todoFacts > 0 ? t("%@, %@ TODO notes", s.profileName, s.todoFacts) : s.profileName)
                         row(t("Version"), s.version)
                     }
-                    HStack {
+                    // in a narrow column the buttons take a second row instead of cutting their words off
+                    FlowLayout(spacing: 8) {
                         Button {
                             Task { await model.runCycle() }
                         } label: {
@@ -121,6 +122,7 @@ struct StatsView: View {
         .task {
             await model.loadStats()
             await model.loadGaps()
+            await model.loadBench()
         }
         .toolbar {
             Button {
@@ -128,6 +130,7 @@ struct StatsView: View {
                     await model.refreshSummary()
                     await model.loadStats()
                     await model.loadGaps()
+                    await model.loadBench()
                 }
             } label: {
                 Label(t("Refresh"), systemImage: "arrow.clockwise")

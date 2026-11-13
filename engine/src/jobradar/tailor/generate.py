@@ -13,6 +13,7 @@ from jobradar import db
 from jobradar.config import AppConfig
 from jobradar.processing.normalize import clean_title
 from jobradar.profile import Profile
+from jobradar.scoring import usage
 from jobradar.scoring.llm import BaseLLM, LLMError, complete_json
 from jobradar.scoring.prompts import (build_repair_prompt, build_review_prompt, build_revision_prompt,
                                       build_tailor_prompt)
@@ -99,6 +100,12 @@ def review_and_revise(cfg: AppConfig, profile: Profile, job: dict[str, Any], eva
 
 def tailor_job(cfg: AppConfig, profile: Profile, conn: sqlite3.Connection, job_id: str, llm: BaseLLM, *,
                language: str | None = None) -> dict[str, Any]:
+    with usage.tagged(job_id=job_id):
+        return _tailor_job(cfg, profile, conn, job_id, llm, language=language)
+
+
+def _tailor_job(cfg: AppConfig, profile: Profile, conn: sqlite3.Connection, job_id: str, llm: BaseLLM, *,
+                language: str | None = None) -> dict[str, Any]:
     job = db.get_job(conn, job_id)
     if not job:
         raise ValueError(t("ilan bulunamadı: {id}", id=job_id))

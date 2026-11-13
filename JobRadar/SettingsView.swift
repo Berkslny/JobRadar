@@ -15,6 +15,9 @@ struct SettingsView: View {
             }
             .tabItem { Label(t("AI model"), systemImage: "sparkles") }
             .tag("ai")
+            MatchingSettings()
+                .tabItem { Label(t("Matching"), systemImage: "wand.and.stars") }
+                .tag("matching")
             MailSettingsView()
                 .tabItem { Label(t("E-mail"), systemImage: "envelope") }
                 .tag("mail")

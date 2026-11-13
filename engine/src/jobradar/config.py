@@ -121,6 +121,34 @@ class ScoringConfig(BaseModel):
     max_description_chars: int = 12000
 
 
+class MatchingConfig(BaseModel):
+    """Semantic matching: an embedding model compares each posting with your tracks and your profile.
+
+    Off by default. With it, the order in which postings are evaluated follows meaning as well as keywords,
+    and postings that the keyword rules would miss can be promoted (see scoring/match.py)."""
+
+    enabled: bool = False
+    # fastembed: a model that runs inside JobRadar (pip install 'jobradar[match]'); ollama: an embedding model of
+    # a local Ollama; openai: an OpenAI-compatible /embeddings endpoint (a local server, or a paid one when
+    # llm.allow_paid_api is true)
+    provider: Literal["fastembed", "ollama", "openai"] = "fastembed"
+    model: str = ""               # "" = the provider's default (see scoring/embed.py)
+    base_url: str = ""            # ollama / openai: "" = the address of llm.ollama / llm.openai
+    cache_dir: str = ""           # fastembed: where the model files are kept; "" = <data_dir>/models
+    threads: int = 0              # fastembed: CPU threads; 0 = decided by the runtime
+    max_chunks: int = Field(4, ge=1, le=8)          # pieces of a posting that are embedded (title + requirements)
+    chunk_chars: int = Field(700, ge=200, le=4000)
+    profile_weight: float = Field(0.35, ge=0, le=1)  # share of "what you have done" next to "what you look for"
+    promote: bool = True          # let a strong semantic match pass the keyword rules
+    # the bar for a promotion, between the typical semantic score of the postings the keyword rules turn
+    # away (0) and that of the postings they accept (1); lower lets more through
+    promote_bar: float = Field(0.5, ge=0.05, le=1.0)
+    promote_min_similarity: float = Field(0.0, ge=0, le=1)  # > 0: a fixed bar instead of the measured one
+    promote_max_per_run: int = Field(5, ge=0, le=200)
+    # time a scan may spend on embedding new postings (a quick scan: a third of it)
+    max_seconds_per_run: int = Field(180, ge=10, le=3600)
+
+
 class AnthropicConfig(BaseModel):
     api_key_env: str = "ANTHROPIC_API_KEY"
     fast_model: str = "claude-haiku-5-5"
@@ -247,6 +275,7 @@ class AppConfig(BaseModel):
     sources: SourcesConfig = Field(default_factory=SourcesConfig)
     filters: FilterConfig = Field(default_factory=FilterConfig)
     scoring: ScoringConfig = Field(default_factory=ScoringConfig)
+    matching: MatchingConfig = Field(default_factory=MatchingConfig)
     llm: LLMConfig = Field(default_factory=LLMConfig)
     notify: NotifyConfig = Field(default_factory=NotifyConfig)
     tailor: TailorConfig = Field(default_factory=TailorConfig)
@@ -298,6 +327,12 @@ class AppConfig(BaseModel):
     @property
     def answers_path(self) -> Path:
         return self.data_path / "answers.yaml"
+
+    @property
+    def models_path(self) -> Path:
+        """Files of the built-in embedding model (downloaded once, safe to delete)."""
+        custom = self.matching.cache_dir.strip()
+        return self.resolve(custom) if custom else self.data_path / "models"
 
     def enabled_tracks(self) -> list[TrackConfig]:
         return sorted([t for t in self.tracks if t.enabled], key=lambda t: t.priority)

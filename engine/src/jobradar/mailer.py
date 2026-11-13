@@ -178,9 +178,7 @@ def build_digest(conn: sqlite3.Connection, cfg: AppConfig, german_level: str = "
     counts = db.status_counts(conn)
     new_jobs = conn.execute("SELECT COUNT(*) FROM jobs WHERE first_seen >= ? AND status != 'filtered'",
                             (_since(24),)).fetchone()[0]
-    pending = conn.execute(
-        "SELECT COUNT(*) FROM jobs WHERE status IN ('new','shortlisted') AND llm_score IS NULL AND prescore >= ?",
-        (cfg.scoring.prescore_min,)).fetchone()[0]
+    pending = db.pending_evaluation_count(conn, cfg.scoring.prescore_min)
     due = follow_ups_due(conn, cfg)
     alerts = health_alerts(conn)
     replies = db.mail_signals(conn, state="pending", limit=8)

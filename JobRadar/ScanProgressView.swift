@@ -82,7 +82,7 @@ struct ScanProgressView: View {
     // MARK: Text
 
     /// Stages the engine writes while a scan runs (queued, done and failed are not among them).
-    private static let activeStages: Set<String> = ["scan", "enrich", "evaluate", "mail", "notify"]
+    private static let activeStages: Set<String> = ["scan", "enrich", "match", "evaluate", "mail", "notify"]
 
     private static func active(_ p: CycleProgress?) -> CycleProgress? {
         guard let p, let stage = p.stage, activeStages.contains(stage) else { return nil }

@@ -1,0 +1,79 @@
+# Checks every pull request and every push to main: the engine's tests on Linux, a build of the Mac app, and
+# smart matching with the real embedding model on Linux and on an Apple Silicon Mac. Nothing is signed,
+# published or deployed here.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: Engine tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the engine
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet -e "engine[dev]"
+      - name: Run the tests
+        working-directory: engine
+        run: ../.venv/bin/python -m pytest
+      - name: Check the app's Turkish texts
+        run: python3 tools/l10n.py check
+      - name: Check that the engine package in the app matches the sources
+        run: python3 tools/check_wheel.py
+
+  app:
+    name: Build the Mac app
+    runs-on: xcode-27
+    steps:
+      - uses: actions/checkout@v5
+      - name: Show the Xcode version
+        run: xcodebuild -version
+      - name: Build (no signing)
+        run: |
+          set -o pipefail
+          xcodebuild -project JobRadar.xcodeproj -target JobRadar -configuration Debug \
+            SYMROOT="$RUNNER_TEMP/build" OBJROOT="$RUNNER_TEMP/obj" CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$RUNNER_TEMP/build.log" | tail -n 40
+      - name: List the compiler warnings in the app's sources
+        if: always()
+        run: |
+          grep -E "\.swift:[0-9]+:[0-9]+: warning:" "$RUNNER_TEMP/build.log" | sed "s|$GITHUB_WORKSPACE/||" | sort -u | head -n 80 || true
+      - name: List the compiler errors
+        if: failure()
+        run: |
+          grep -E "(error|fatal error):" "$RUNNER_TEMP/build.log" | sort -u | head -n 60 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done
+
+  matching:
+    name: Smart matching with the real model (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, xcode-27]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the engine the way the app does (uv, Python 3.12, the package inside the app)
+        run: |
+          pipx install uv
+          uv venv --python 3.12 "$RUNNER_TEMP/venv"
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" JobRadar/jobradar-*.whl
+          uv pip install --python "$RUNNER_TEMP/venv/bin/python" "fastembed>=0.9" pytest
+      - name: Download the built-in model, then embed and rank sample postings
+        working-directory: engine
+        env:
+          JOBRADAR_TEST_REAL_MODEL: "1"
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -m pytest tests/test_matching.py -k "real_model or installed_library" -s -p no:cacheprovider

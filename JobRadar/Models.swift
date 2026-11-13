@@ -48,6 +48,20 @@ struct JobDetailExtra: Codable {
     var events: [JobEvent]
     var contacts: [Contact]
     var mailSignals: [MailSignal]?
+    /// Your own verdict on the posting ("good", "maybe", "bad", "skip"); older engines do not send it.
+    var label: String?
+    /// Semantic score of the posting while smart matching is on.
+    var match: MatchInfo?
+}
+
+/// How close a posting is to your tracks and your profile in meaning (smart matching).
+struct MatchInfo: Codable, Hashable {
+    var semantic: Double?
+    var trackSim: Double?
+    var profileSim: Double?
+    var track: String?
+    var trackName: String?
+    var promoted: Bool?
 }
 
 /// Detail = the list row fields plus the extra detail fields (same JSON object, decoded twice).
@@ -257,6 +271,11 @@ struct TaskResult: Codable {
     var tracks: [TrackSetup]?
     var titleExclude: [String]?
     var excludeSenior: Bool?
+    // smart matching: the model test and a run over the stored postings
+    var dim: Int?
+    var embedded: Int?
+    var waiting: Int?
+    var promoted: Int?
 }
 
 struct TaskInfo: Codable, Identifiable {
@@ -306,6 +325,8 @@ struct ServerSummary: Codable {
     var llmReady: Bool?
     var profileMissing: [String]?
     var language: String?
+    /// What this engine can do beyond version 1.0 ("labels", "matching"); older engines send nothing.
+    var features: [String]?
 }
 
 /// Stage and progress of the running scan (progress bar).
@@ -1086,4 +1107,181 @@ struct DetectBody: Encodable {
 
 struct DetectResponse: Codable {
     var companies: [CompanyBoard]
+}
+
+// MARK: - Smart matching and measurements
+
+struct MatchingModelOption: Codable, Hashable, Identifiable {
+    var id: String
+    var sizeMb: Int
+    var note: String
+}
+
+/// Smart matching (GET/PUT /api/v1/matching).
+struct MatchingState: Codable, Hashable {
+    var enabled: Bool = false
+    var provider: String = "fastembed"
+    /// Empty: the provider's standard model (`modelEffective`).
+    var model: String = ""
+    var modelEffective: String = ""
+    var baseUrl: String = ""
+    var baseUrlEffective: String = ""
+    var promote: Bool = true
+    var promoteMaxPerRun: Int = 5
+    /// The built-in provider needs an extra package inside the engine.
+    var installed: Bool = false
+    var scored: Int = 0
+    var promoted: Int = 0
+    var lastError: String = ""
+    var lastRun: String = ""
+    var lastEmbedded: Int? = nil
+    var lastWaiting: Int? = nil
+    var lastPromoted: Int? = nil
+    /// The semantic score a posting needs to be let through; nil while it cannot be measured.
+    var threshold: Double? = nil
+    /// Postings with a semantic score that the keyword rules accept, and that they turn away, in the last run.
+    var lastReference: Int? = nil
+    var lastBackground: Int? = nil
+    var referenceNeeded: Int? = nil
+    var backgroundNeeded: Int? = nil
+    var providers: [String] = []
+    var models: [MatchingModelOption] = []
+    var defaultModels: [String: String] = [:]
+}
+
+struct MatchingBody: Encodable {
+    var enabled: Bool?
+    var provider: String?
+    var model: String?
+    var baseUrl: String?
+    var promote: Bool?
+    var promoteMaxPerRun: Int?
+}
+
+/// A posting waiting for your verdict (GET /api/v1/labels/queue).
+struct LabelCandidate: Codable, Identifiable, Hashable {
+    var id: String
+    var title: String
+    var company: String
+    var location: String
+    var url: String
+    var applyUrl: String
+    var description: String
+    var badges: [Badge]
+    var postedAt: String?
+    var salaryText: String
+    var remoteLabel: String
+    var employmentLabel: String
+
+    var postingURL: URL? { URL(string: applyUrl.isEmpty ? url : applyUrl) }
+}
+
+struct LabelQueueResponse: Codable {
+    var jobs: [LabelCandidate]
+    var remaining: Int
+    var judged: Int
+}
+
+struct LabelBody: Encodable {
+    var label: String
+}
+
+struct LabelResponse: Codable {
+    var jobId: String
+    var label: String?
+}
+
+struct BenchLabels: Codable, Hashable {
+    var total: Int
+    var explicit: Int
+    var fromStatus: Int
+    var good: Int
+    var maybe: Int
+    var bad: Int
+    var needed: Int
+    var enough: Bool
+}
+
+/// One way of ordering postings, measured on your verdicts.
+struct BenchRanking: Codable, Hashable, Identifiable {
+    var id: String
+    var name: String
+    var n: Int
+    var wanted: Int
+    var precisionAt10: Double?
+    var budget: Int
+    var budgetHitRate: Double?
+    var ndcgAt10: Double?
+    var auc: Double?
+}
+
+struct BenchRankings: Codable, Hashable {
+    var n: Int
+    var semantic: Bool
+    var rows: [BenchRanking]
+}
+
+/// A group of postings at the gate in front of the AI model.
+struct BenchGroup: Codable, Hashable, Identifiable {
+    var id: String
+    var postings: Int
+    var judged: Int
+    var wanted: Int
+    var rate: Double?
+    var estimatedWanted: Double?
+}
+
+struct BenchGate: Codable, Hashable {
+    var groups: [BenchGroup]
+    var estimatedMissed: Double?
+    var estimatedRecall: Double?
+}
+
+/// The AI verdict next to yours.
+struct BenchJudge: Codable, Hashable {
+    var n: Int
+    var hitRate: Double?
+    var agreement: Double?
+    var kappa: Double?
+    var bothYes: Int
+    var bothNo: Int
+    var onlyAiYes: Int
+    var onlyYouYes: Int
+}
+
+struct BenchUsagePurpose: Codable, Hashable, Identifiable {
+    var purpose: String
+    var calls: Int
+    var failed: Int
+    var avgInputTokens: Int?
+    var avgOutputTokens: Int?
+    var avgSeconds: Double
+    var costUsd: Double?
+
+    var id: String { purpose }
+}
+
+struct BenchUsage: Codable, Hashable {
+    var days: Int
+    var calls: Int
+    var failed: Int
+    var inputTokens: Int
+    var outputTokens: Int
+    var costUsd: Double?
+    var byPurpose: [BenchUsagePurpose]
+}
+
+struct BenchMatching: Codable, Hashable {
+    var enabled: Bool
+    var scored: Int
+}
+
+/// Measurements on your own verdicts (GET /api/v1/bench).
+struct BenchReport: Codable, Hashable {
+    var labels: BenchLabels
+    var rankings: BenchRankings
+    var gate: BenchGate
+    var judge: BenchJudge
+    var usage: BenchUsage
+    var matching: BenchMatching
 }

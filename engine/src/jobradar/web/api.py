@@ -30,11 +30,13 @@ from jobradar.processing.flags import flag_labels
 from jobradar.processing.normalize import canonical_url, clean_title
 from jobradar.i18n import t as tr
 from jobradar.profile import Profile
+from jobradar.scoring import bench, match
 from jobradar.scoring.llm import BaseLLM, LLMError, cost_label
 from jobradar.scoring.llm import llm_label as llm_text
 from jobradar.textutil import now_iso, today_iso
 
 MAX_PAGE = 20000  # most postings one /jobs answer carries
+FEATURES = ("labels", "bench", "matching")  # what a client may use beyond the 1.0 API (in /summary)
 
 VIEWS: dict[str, Optional[list[str]]] = {
     "inbox": ["new", "shortlisted"],
@@ -183,6 +185,8 @@ def job_detail(conn: sqlite3.Connection, cfg: AppConfig, prof: Profile, job: dic
         "events": db.events_for(conn, job["id"])[:60],
         "contacts": db.contacts_for_company(conn, job.get("company_norm", "")),
         "mail_signals": [signal_view(conn, x) for x in db.mail_signals_for_job(conn, job["id"])],
+        "label": bench.label_name(db.get_label(conn, job["id"])),
+        "match": match.job_view(conn, cfg, job["id"]) if cfg.matching.enabled else None,
     })
     return out
 
@@ -211,6 +215,11 @@ class UrlIn(BaseModel):
 
 class SignalApplyIn(BaseModel):
     job_id: str = ""
+
+
+class LabelIn(BaseModel):
+    label: str = ""   # good | maybe | bad | skip; "" takes the verdict back
+    note: str = ""
 
 
 def build_router(cfg: AppConfig, *, llm_factory: Callable[[AppConfig], Optional[BaseLLM]],
@@ -268,9 +277,7 @@ def build_router(cfg: AppConfig, *, llm_factory: Callable[[AppConfig], Optional[
         c = conn()
         try:
             counts = db.status_counts(c)
-            pending = c.execute(
-                "SELECT COUNT(*) FROM jobs WHERE status IN ('new','shortlisted') AND llm_score IS NULL "
-                "AND prescore >= ?", (cfg.scoring.prescore_min,)).fetchone()[0]
+            pending = db.pending_evaluation_count(c, cfg.scoring.prescore_min)
             strong = c.execute(
                 "SELECT COUNT(*) FROM jobs WHERE status IN ('new','shortlisted') AND llm_score >= ?",
                 (cfg.notify.email.min_score,)).fetchone()[0]
@@ -302,6 +309,7 @@ def build_router(cfg: AppConfig, *, llm_factory: Callable[[AppConfig], Optional[
             "llm": llm_label, "llm_ready": llm_ready, "profile_name": prof.name,
             "profile_missing": profile_tools.missing_basics(prof), "todo_facts": len(prof.todo_facts()),
             "language": i18n.get_lang(),
+            "features": list(FEATURES), "matching_enabled": cfg.matching.enabled,
             "tracks": [{"id": t.id, "name": t.name} for t in cfg.enabled_tracks()],
             "statuses": [{"id": s, "label": tr(STATUS_LABELS_TR.get(s, s))} for s in STATUSES],
         }
@@ -365,6 +373,49 @@ def build_router(cfg: AppConfig, *, llm_factory: Callable[[AppConfig], Optional[
         finally:
             c.close()
         return {"ok": True}
+
+    @r.put("/jobs/{job_id}/label")
+    def set_label(job_id: str, body: LabelIn) -> dict[str, Any]:
+        """Your own verdict on a posting: the reference for the measurements (GET /bench)."""
+        c = conn()
+        try:
+            need_job(c, job_id)
+            try:
+                name = bench.set_label(c, job_id, body.label, body.note)
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from exc
+        finally:
+            c.close()
+        return {"job_id": job_id, "label": name}
+
+    @r.get("/labels/queue")
+    def label_queue(limit: int = 10) -> dict[str, Any]:
+        """Postings to judge next: a random sample of what the AI model sees and of what it never sees."""
+        german = profile().german_level
+        c = conn()
+        try:
+            ids, remaining = bench.label_queue(c, cfg, max(1, min(limit, 50)))
+            jobs = []
+            for job_id in ids:
+                job = db.get_job(c, job_id)
+                if job:
+                    item = job_summary(job, german)
+                    item["description"] = (job.get("description") or "")[:6000]
+                    jobs.append(item)
+            judged = c.execute("SELECT COUNT(*) FROM labels WHERE label >= 0").fetchone()[0]
+        finally:
+            c.close()
+        return {"jobs": jobs, "remaining": sum(remaining.values()), "judged": int(judged)}
+
+    @r.get("/bench")
+    def bench_ep(days: int = 30, explicit: bool = False) -> dict[str, Any]:
+        """Measurements on your own verdicts: rankings, the gate in front of the AI model, the judge, the cost."""
+        prof = profile()
+        c = conn()
+        try:
+            return bench.report(c, cfg, prof, days=max(1, min(days, 365)), explicit_only=explicit)
+        finally:
+            c.close()
 
     @r.post("/jobs/{job_id}/evaluate", status_code=202)
     def evaluate(job_id: str) -> dict[str, Any]:

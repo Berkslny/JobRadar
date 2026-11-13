@@ -78,6 +78,23 @@ scoring:
   apply_threshold: 4.0
   max_description_chars: 12000
 
+# Smart matching: an embedding model compares every posting with your tracks and your profile by meaning.
+# Evaluations then go first to the postings that keywords AND meaning agree on, and a posting the keyword
+# rules would miss can be promoted (rules you set yourself, such as title words or seniority, always hold).
+# The built-in model and Ollama run on this computer: nothing about you or the postings is sent anywhere.
+matching:
+  enabled: false
+  provider: fastembed         # fastembed (built in: pip install 'jobradar[match]') | ollama | openai (compatible)
+  model: ""                   # "" = sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 (220 MB, once);
+                              # ollama: "" = bge-m3 (ollama pull bge-m3); openai-compatible: name it
+  base_url: ""                # ollama / openai: "" = the address under llm
+  promote: true               # let a strong semantic match pass the keyword rules
+  promote_max_per_run: 5      # at most this many per scan
+  promote_bar: 0.5            # the score needed: between the typical posting your keyword rules turn
+                              # away (0) and the typical one they accept (1); lower lets more through
+  max_seconds_per_run: 180    # time a scan may spend on embedding (a quick scan: a third of it);
+                              # the rest waits for the next scan
+
 llm:
   provider: none              # claude_cli | anthropic | openai | ollama | auto | none
   allow_paid_api: false       # pay-per-token APIs (anthropic, hosted openai-compatible) stay off unless true

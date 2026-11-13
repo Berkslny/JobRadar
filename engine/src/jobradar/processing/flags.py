@@ -433,4 +433,7 @@ def flag_labels(flags: dict[str, Any], profile_german: str = "") -> list[tuple[s
         out.append((t("Aracı firma"), "warn"))
     if flags.get("stale"):
         out.append((t("Eski/tekrar yayınlanmış ilan"), "warn"))
+    if (flags.get("semantic") or {}).get("promoted"):
+        # no keyword tied it to a track; semantic matching found it close to one
+        out.append((t("Anlamsal eşleşme"), "info"))
     return out

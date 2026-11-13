@@ -19,6 +19,7 @@ from jobradar.processing.filters import FilterEngine
 from jobradar.processing.flags import detect_all, detect_salary
 from jobradar.processing.normalize import canonical_url, normalize_company, normalize_title
 from jobradar.profile import Profile
+from jobradar.scoring import usage
 from jobradar.scoring.evaluate import evaluate_job
 from jobradar.scoring.llm import BaseLLM, LLMError, is_fatal, llm_hint
 from jobradar.scoring.prescore import PreScorer
@@ -105,12 +106,15 @@ class Processor:
     def refresh(self, job: dict[str, Any]) -> None:
         """(Re)compute flags, filter verdict and pre-score from current fields."""
         hints = (job.get("flags") or {}).get("hints") or {}
+        semantic = (job.get("flags") or {}).get("semantic")
         flags = detect_all(
             title=job.get("title", ""), company=job.get("company", ""), location=job.get("location", ""),
             text=job.get("description", ""), raw_employment=hints.get("raw_employment", ""),
             raw_remote=hints.get("raw_remote"), raw_level=hints.get("raw_level", ""), profile=self.profile,
         )
         flags["hints"] = hints
+        if semantic and self.cfg.matching.enabled and self.cfg.matching.promote:
+            flags["semantic"] = semantic  # a promotion by semantic matching survives a re-filter
         injection = guard.scan(job.get("description", ""))
         if injection:
             flags["injection"] = injection
@@ -128,6 +132,9 @@ class Processor:
         reasons = self.filters.reasons(job)
         score, track, detail = self.prescorer.score(job)
         job["prescore"], job["prescore_detail"] = score, detail
+        marker = flags.get("semantic") or {}
+        if marker.get("promoted") and self.cfg.track(marker.get("track")):
+            track = marker["track"]  # no keyword tied it to a track: the track it is closest to in meaning
         if not job.get("llm_score"):
             job["track"] = track
         if reasons:
@@ -250,6 +257,7 @@ def _merge_duplicate_after_enrich(conn: sqlite3.Connection, job: dict[str, Any])
         merged, _ = merge(other, job)
         db.update_job(conn, merged)
         db.reassign_urls(conn, job["id"], other["id"])
+        db.move_label(conn, job["id"], other["id"])
         db.delete_job(conn, job["id"])
         return other["id"]
     return None
@@ -309,7 +317,7 @@ def enrich_pending(conn: sqlite3.Connection, cfg: AppConfig, profile: Profile, *
     limit = limit if limit is not None else cfg.sources.enrich_per_run
     rows = conn.execute(
         "SELECT * FROM jobs WHERE status = 'new' AND enriched_at IS NULL AND length(description) < 400 "
-        "AND prescore >= ? ORDER BY prescore DESC LIMIT ?",
+        f"AND {db.EVALUABLE} ORDER BY prescore DESC LIMIT ?",
         (max(0.0, cfg.scoring.prescore_min - 10), limit),
     ).fetchall()
     done = 0
@@ -332,6 +340,22 @@ def enrich_pending(conn: sqlite3.Connection, cfg: AppConfig, profile: Profile, *
 # ---------------------------------------------------------------------------
 
 
+def evaluation_queue(conn: sqlite3.Connection, cfg: AppConfig, *, limit: int, force: bool = False) -> list[dict[str, Any]]:
+    """The postings the next evaluations go to, best first.
+
+    With semantic matching on, the keyword rank and the semantic rank are fused and promoted postings are
+    included; otherwise (or while no semantic score exists yet) the quick score alone decides."""
+    if cfg.matching.enabled:
+        from jobradar.scoring import match  # late: match imports the Processor from here
+
+        ids = match.llm_queue(conn, cfg, limit=limit, force=force)
+        if ids is not None:
+            return [j for j in (db.get_job(conn, i) for i in ids) if j]
+    q = ("SELECT * FROM jobs WHERE status IN ('new','shortlisted') AND prescore >= ? "
+         + ("" if force else "AND llm_score IS NULL ") + "ORDER BY prescore DESC LIMIT ?")
+    return [db.row_to_job(r) for r in conn.execute(q, (cfg.scoring.prescore_min, limit))]
+
+
 def evaluate_pending(conn: sqlite3.Connection, cfg: AppConfig, profile: Profile, llm: BaseLLM, *,
                      limit: int | None = None, job_ids: list[str] | None = None, force: bool = False,
                      log: Log = print, client: httpx.Client | None = None,
@@ -340,9 +364,7 @@ def evaluate_pending(conn: sqlite3.Connection, cfg: AppConfig, profile: Profile,
     if job_ids:
         jobs = [j for j in (db.get_job(conn, i) for i in job_ids) if j]
     else:
-        q = ("SELECT * FROM jobs WHERE status IN ('new','shortlisted') AND prescore >= ? "
-             + ("" if force else "AND llm_score IS NULL ") + "ORDER BY prescore DESC LIMIT ?")
-        jobs = [db.row_to_job(r) for r in conn.execute(q, (cfg.scoring.prescore_min, limit))]
+        jobs = evaluation_queue(conn, cfg, limit=limit, force=force)
     proc = Processor(cfg, profile)
     results: list[tuple[str, float]] = []
     same_errors, last_error = 0, ""
@@ -358,9 +380,11 @@ def evaluate_pending(conn: sqlite3.Connection, cfg: AppConfig, profile: Profile,
         if len(job.get("description") or "") < 200:
             log(f"  – {job['title'][:60]}: açıklama yok, değerlendirme atlandı")
             db.add_event(conn, job["id"], "eval_skipped", t("açıklama yok"))
+            conn.commit()
             continue
         try:
-            ev, notes, provider, model = evaluate_job(cfg, profile, job, llm)
+            with usage.tagged(job_id=job["id"]):
+                ev, notes, provider, model = evaluate_job(cfg, profile, job, llm)
         except LLMError as exc:
             msg = str(exc)
             log(f"  ✗ {job['title'][:60]}: {msg[:200]}")

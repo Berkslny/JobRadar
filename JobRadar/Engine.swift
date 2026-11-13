@@ -161,6 +161,9 @@ nonisolated struct EngineMarker: Sendable {
     var uv = ""
     var jobBoards = false
     var jobBoardsError = ""
+    /// The runtime of the built-in embedding model (smart matching).
+    var matching = false
+    var matchingError = ""
 
     static func read() -> EngineMarker {
         guard let data = try? Data(contentsOf: EnginePaths.marker),
@@ -170,12 +173,15 @@ nonisolated struct EngineMarker: Sendable {
         m.uv = object["uv"] as? String ?? ""
         m.jobBoards = object["job_boards"] as? Bool ?? false
         m.jobBoardsError = object["job_boards_error"] as? String ?? ""
+        m.matching = object["matching"] as? Bool ?? false
+        m.matchingError = object["matching_error"] as? String ?? ""
         return m
     }
 
     func write() {
         let object: [String: Any] = ["wheel": wheel, "uv": uv, "job_boards": jobBoards,
-                                     "job_boards_error": jobBoardsError]
+                                     "job_boards_error": jobBoardsError, "matching": matching,
+                                     "matching_error": matchingError]
         guard let data = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
         else { return }
         try? data.write(to: EnginePaths.marker, options: .atomic)
@@ -190,6 +196,8 @@ enum EngineRuntime {
     static let uvVersion = "0.13.7"
     static let pythonVersion = "3.12"
     static let jobBoardsPackage = "python-jobspy>=1.4"
+    /// Runs the built-in embedding model of smart matching (ONNX on the CPU, no PyTorch).
+    static let matchingPackage = "fastembed>=0.9"
 
     private static var uvDownload: (url: String, sha256: String) {
         #if arch(arm64)
@@ -207,7 +215,7 @@ enum EngineRuntime {
         return wheels.sorted { $0.lastPathComponent < $1.lastPathComponent }.last
     }
 
-    /// Version of the engine inside this app ("1.0.0" from "jobradar-1.0.0-py3-none-any.whl").
+    /// Version of the engine inside this app ("1.1.0" from "jobradar-1.1.0-py3-none-any.whl").
     static var bundledVersion: String {
         let parts = bundledWheel?.lastPathComponent.split(separator: "-") ?? []
         return parts.count > 1 ? String(parts[1]) : ""
@@ -248,16 +256,18 @@ enum EngineRuntime {
     }
 
     /// Installs or updates the engine. Does nothing when it is already current.
-    static func ensureInstalled(includeJobBoards: Bool, progress: @escaping (EngineStep) -> Void) async throws {
+    static func ensureInstalled(includeJobBoards: Bool, includeMatching: Bool = false,
+                                progress: @escaping (EngineStep) -> Void) async throws {
         guard let wheel = bundledWheel, let hash = try? sha256(of: wheel) else { throw EngineError.noWheel }
         let fm = FileManager.default
         var marker = EngineMarker.read()
         let havePython = fm.isExecutableFile(atPath: EnginePaths.python.path)
         let current = marker.wheel == hash && havePython
         let wantJobBoards = includeJobBoards && !marker.jobBoards
-        if current && !wantJobBoards { return }
+        let wantMatching = includeMatching && !marker.matching
+        if current && !wantJobBoards && !wantMatching { return }
 
-        let total = (current ? 0 : 3) + (wantJobBoards ? 1 : 0)
+        let total = (current ? 0 : 3) + (wantJobBoards ? 1 : 0) + (wantMatching ? 1 : 0)
         var index = 0
         func announce(_ title: String) -> String {
             index += 1
@@ -296,6 +306,20 @@ enum EngineRuntime {
                 // the app works without them (company career pages and manual links still do)
                 marker.jobBoards = false
                 marker.jobBoardsError = error.localizedDescription
+            }
+            marker.write()
+        }
+        if wantMatching {
+            let step = announce(t("Adding smart matching"))
+            do {
+                if !fm.isExecutableFile(atPath: EnginePaths.uv.path) { try await installUV(step: step) }
+                try await uv(["pip", "install", "--python", EnginePaths.python.path, matchingPackage], step: step)
+                marker.matching = true
+                marker.matchingError = ""
+            } catch {
+                // scans go on with keywords alone
+                marker.matching = false
+                marker.matchingError = error.localizedDescription
             }
             marker.write()
         }

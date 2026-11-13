@@ -856,3 +856,118 @@ TR.update({
     "The earlier daily timer was removed.": "Önceki günlük zamanlayıcı kaldırıldı.",
     "What was here before is kept in %@.": "Daha önce burada olanlar %@ klasöründe duruyor.",
 })
+
+# --- smart matching and measurements (MatchingViews.swift, and their places in other views)
+TR.update({
+    "Matching": "Eşleştirme",
+    "Adding smart matching": "Akıllı eşleştirme ekleniyor",
+    "Semantic score %@": "Anlamsal puan %@",
+    "Your verdict: %@": "Senin kararın: %@",
+    "Take my verdict back": "Kararımı geri al",
+    "My verdict": "Benim kararım",
+    "Say whether this job fits you. JobRadar measures its rankings and rules against your verdicts.":
+        "Bu ilanın sana uyup uymadığını söyle. JobRadar sıralamalarını ve kurallarını senin kararlarına göre ölçer.",
+    "Fits": "Uygun",
+    "Does not fit": "Uygun değil",
+    "Cannot tell": "Karar veremiyorum",
+    "Smart matching compares every posting with your search tracks and your profile by meaning, not only by keywords. Evaluations then go first to the postings that keywords and meaning agree on, and a posting your keywords would miss can still reach you. Rules you set yourself (title words, seniority, kind of job) always hold.":
+        "Akıllı eşleştirme her ilanı arama alanların ve profilinle sadece anahtar kelimelere göre değil, anlamına göre de karşılaştırır. Değerlendirmeler önce anahtar kelimelerin ve anlamın birlikte işaret ettiği ilanlara gider; anahtar kelimelerinin kaçıracağı bir ilan da sana ulaşabilir. Kendi koyduğun kurallar (başlık kelimeleri, kıdem, çalışma türü) her zaman geçerlidir.",
+    "Smart matching": "Akıllı eşleştirme",
+    "Use smart matching": "Akıllı eşleştirmeyi kullan",
+    "Let strong matches pass the keyword rules": "Güçlü eşleşmeler anahtar kelime kurallarını aşabilsin",
+    "Such postings carry the \"Semantic match\" badge. At most %@ are let through per scan.":
+        "Bu ilanlar \"Anlamsal eşleşme\" işaretini taşır. Her taramada en fazla %@ ilan öne çıkarılır.",
+    "Model": "Model",
+    "Runs with": "Nerede çalışsın",
+    "Built into JobRadar": "JobRadar'ın içinde",
+    "The model is downloaded once from Hugging Face and then runs on this Mac. Your profile and the postings are not sent anywhere for it.":
+        "Model bir kez Hugging Face'ten indirilir, sonra bu Mac'te çalışır. Bunun için profilin ve ilanlar hiçbir yere gönderilmez.",
+    "The address in the AI model settings": "Yapay zeka modeli ayarlarındaki adres",
+    "An embedding model of Ollama, for example bge-m3. Download it in Ollama first.":
+        "Ollama'daki bir embedding modeli, örneğin bge-m3. Önce Ollama'da indir.",
+    "Any service with an OpenAI-compatible embeddings endpoint. A paid service is only used when a paid AI model is allowed.":
+        "OpenAI uyumlu embedding sunan herhangi bir servis. Ücretli bir servis yalnızca ücretli yapay zeka modeline izin verilmişse kullanılır.",
+    "Jobs with a semantic score": "Anlamsal puanı olan ilanlar",
+    "Let through by smart matching": "Akıllı eşleştirmenin öne çıkardıkları",
+    "Last run": "Son çalışma",
+    "%@ jobs are compared in the next scan.": "%@ ilan bir sonraki taramada karşılaştırılacak.",
+    "Test the model": "Modeli dene",
+    "Compare my jobs now": "İlanlarımı şimdi karşılaştır",
+    "Adding smart matching to the engine…": "Akıllı eşleştirme motora ekleniyor…",
+    "Smart matching could not be added to the engine: %@": "Akıllı eşleştirme motora eklenemedi: %@",
+    "The engine does not have the matching package yet.": "Motorda eşleştirme paketi henüz yok.",
+    "The server has no matching package installed (pip install 'jobradar[match]').":
+        "Sunucuda eşleştirme paketi kurulu değil (pip install 'jobradar[match]').",
+    "This engine is older than the app and has no smart matching yet.":
+        "Bu motor uygulamadan eski; akıllı eşleştirme henüz yok.",
+    "Loading the model. The first time it is downloaded, which can take a few minutes.":
+        "Model yükleniyor. İlk seferde indirilir; bu birkaç dakika sürebilir.",
+    "Asking the model…": "Modele soruluyor…",
+    "The model works: %@ answered in %@ seconds.": "Model çalışıyor: %@ %@ saniyede yanıt verdi.",
+    "Comparing your jobs. With many jobs this takes a few minutes.":
+        "İlanların karşılaştırılıyor. İlan çoksa birkaç dakika sürer.",
+    "%@ jobs compared, %@ let through.": "%@ ilan karşılaştırıldı, %@ ilan öne çıkarıldı.",
+    "How well JobRadar finds your jobs": "JobRadar senin ilanlarını ne kadar iyi buluyor",
+    "Measured on your own verdicts: the jobs you shortlisted, applied to or skipped, and the ones you judged here. The more verdicts, the steadier the numbers.":
+        "Kendi kararlarınla ölçülür: kısa listeye aldığın, başvurduğun ya da geçtiğin ilanlar ve burada karar verdiklerin. Karar sayısı arttıkça sayılar oturur.",
+    "%@ verdicts: %@ fit, %@ maybe, %@ do not fit": "%@ karar: %@ uygun, %@ belki, %@ uygun değil",
+    "Judge jobs…": "İlanlara karar ver…",
+    "The orders are compared here once you have %@ verdicts. From about %@ on, the numbers hold still.":
+        "Sıralamalar burada %@ karardan sonra karşılaştırılır. Yaklaşık %@ karardan itibaren sayılar oturur.",
+    "No job can be let through yet: JobRadar first needs more jobs to measure against. With a semantic score so far: %@ jobs that match your keywords (%@ needed) and %@ that do not (%@ needed).":
+        "Henüz hiçbir ilan öne çıkarılamıyor: JobRadar'ın önce kıyaslayacağı daha fazla ilana ihtiyacı var. Şimdilik anlamsal puanı olanlar: anahtar kelimelerine uyan %@ ilan (gereken %@) ve uymayan %@ ilan (gereken %@).",
+    "No job is let through: by meaning, the jobs your keywords turn away look like the ones they accept.":
+        "Hiçbir ilan öne çıkarılmıyor: anlam bakımından, anahtar kelimelerinin elediği ilanlar kabul ettiklerine benziyor.",
+    "Keys 1, 2 and 3 choose Fits, Maybe and Does not fit.": "1, 2 ve 3 tuşları Uygun, Belki ve Uygun değil kararını verir.",
+    "With fewer than %@ verdicts, or only a few of one kind, the numbers below still move a lot.":
+        "%@ karardan azsa ya da bir türden çok az karar varsa aşağıdaki sayılar hâlâ çok oynar.",
+    "Which order puts the jobs you want first?": "Hangi sıralama istediğin ilanları öne alıyor?",
+    "First 10": "İlk 10",
+    "First %@": "İlk %@",
+    "Measured on the %@ jobs that have a verdict of yours. First 10 and first %@: the share of the jobs at the top of an order that you want. NDCG@10 and AUC: how well the whole order follows your verdicts; 1.0 is perfect, and an AUC of 0.5 is chance.":
+        "Karar verdiğin %@ ilan üzerinde ölçülür. İlk 10 ve ilk %@: bir sıralamanın en üstündeki ilanların ne kadarını istediğin. NDCG@10 ve AUC: sıralamanın tamamı kararlarına ne kadar uyuyor; 1.0 kusursuz, AUC için 0.5 rastgele demektir.",
+    "The first rows are measured on the same jobs, so they can be compared.":
+        "İlk satırlar aynı ilanlar üzerinde ölçülür, bu yüzden birbirleriyle karşılaştırılabilir.",
+    "Turn on smart matching in Settings to compare it with the keyword order here.":
+        "Akıllı eşleştirmeyi Ayarlar'dan açarsan burada anahtar kelime sıralamasıyla karşılaştırılır.",
+    "What reaches the AI model, and what never does": "Yapay zeka modeline neler ulaşıyor, neler hiç ulaşmıyor",
+    "Judged": "Karar verilen",
+    "You want": "İstediğin",
+    "Estimate": "Tahmin",
+    "About %@ jobs you would want never reach the AI model.":
+        "İsteyeceğin yaklaşık %@ ilan yapay zeka modeline hiç ulaşmıyor.",
+    "Estimate: the share you wanted among the jobs you judged, applied to the whole group. It appears once you judged at least 5 jobs of a group.":
+        "Tahmin: karar verdiğin ilanlar içinde istediklerinin payı, grubun tamamına uygulanır. Bir gruptan en az 5 ilana karar verince görünür.",
+    "Does the AI model judge like you?": "Yapay zeka modeli senin gibi mi karar veriyor?",
+    "On the %@ jobs that both of you judged: the same verdict on %@. Only the AI model said yes: %@. Only you said yes: %@.":
+        "İkinizin de karar verdiği %@ ilanda: %@ oranında aynı karar. Sadece yapay zeka modeli evet dedi: %@. Sadece sen evet dedin: %@.",
+    "Agreement beyond chance (kappa): %@. From 0.6 on it is good.":
+        "Şansın ötesinde uyum (kappa): %@. 0.6 ve üstü iyidir.",
+    "%@ of the evaluated jobs were jobs you want.": "Değerlendirilen ilanların %@ kadarı istediğin ilanlardı.",
+    "Use of the AI model in the last %@ days": "Son %@ günde yapay zeka modeli kullanımı",
+    "Evaluated by the AI model": "Yapay zeka modeli değerlendirdi",
+    "Waiting for the AI model": "Yapay zeka modelini bekliyor",
+    "Quick score too low": "Ön puanı düşük",
+    "Matches none of your tracks": "Hiçbir arama alanına uymuyor",
+    "Evaluating jobs": "İlan değerlendirme",
+    "Writing CV and letter": "CV ve ön yazı yazma",
+    "Second reading of the documents": "Belgelerin ikinci okuması",
+    "Reading a CV": "CV okuma",
+    "Setting up the search": "Aramayı kurma",
+    "Connection tests": "Bağlantı denemeleri",
+    "%@ calls, %@ tokens in, %@ tokens out": "%@ çağrı, %@ giriş token'ı, %@ çıkış token'ı",
+    "%@ failed": "%@ başarısız",
+    "%@ USD at API prices (a subscription is not charged this)": "API fiyatlarıyla %@ USD (abonelikte bu ücret alınmaz)",
+    "%@ calls": "%@ çağrı",
+    "on average %@ tokens in and %@ out": "ortalama %@ giriş ve %@ çıkış token'ı",
+    "%@ seconds each": "çağrı başına %@ saniye",
+    "Does this job fit you?": "Bu ilan sana uygun mu?",
+    "%@ judged · %@ to go": "%@ ilana karar verildi · %@ kaldı",
+    "Judge the posting as if you had just found it yourself. Scores are hidden on purpose. The jobs are drawn from everything JobRadar collected, including what its rules filtered out, so the numbers show what the rules miss.":
+        "İlana, onu az önce kendin bulmuşsun gibi karar ver. Puanlar bilerek gizlendi. İlanlar JobRadar'ın topladığı her şeyden seçilir, kuralların elediği ilanlar da dahil; böylece sayılar kuralların neyi kaçırdığını gösterir.",
+    "Nothing left to judge": "Karar verilecek ilan kalmadı",
+    "More jobs appear here after the next scan.": "Bir sonraki taramadan sonra burada yeni ilanlar görünür.",
+    "This posting came without a description. Judge it by its title, or open it.":
+        "Bu ilan açıklamasız geldi. Başlığına göre karar ver ya da ilanı aç.",
+    "Key %@": "%@ tuşu",
+})
