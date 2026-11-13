@@ -1,0 +1,198 @@
+disk image under test: JobRadar-1.1.dmg sha256 8233e659482a6df571720775a6222f64588bda5927af44331dee49ef72fcbf58
+
+=== tools and display (02:28:37) ===
+set 1920x1080: ok
+current 1920x1080 pixels 1920x1080
+
+=== install from the disk image (02:28:56) ===
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+installed 1.1 from JobRadar-1.1.dmg
+signature valid
+
+=== first start: the app installs its engine (02:29:08) ===
+engine listening after about 10 s
+trusted
+job boards added
+engine stopped
+
+=== made-up workspace (02:29:19) ===
+Demo: 10 ilan, 9 kayıt, 1 birleşti, 3 elendi
+Demo klasörü: /Users/runner/Library/Application Support/JobRadar/workspace
+seed: found 57, new 57, merged 0, filtered 21
+labels: {'total': 43, 'explicit': 37, 'from_status': 6, 'good': 18, 'maybe': 9, 'bad': 16, 'needed': 30, 'enough': True}
+group evaluated       total  17 judged 12 wanted 12
+group queue           total  12 judged  7 wanted 5
+group low_score       total  11 judged  7 wanted 1
+group track_filtered  total  16 judged 11 wanted 5
+rankings on 43 postings; estimated missed: 8.8
+accepted  27 postings · status ['new'] · quick score 29 to 94
+low        8 postings · status ['new'] · quick score 8 to 12
+hidden     8 postings · status ['filtered'] · quick score 6 to 24
+
+=== en: start (02:29:26) ===
+engine listening after about 4 s
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,200 1080x732)
+shot 01-en-inbox
+bench-before.json: 1236 bytes
+
+=== en: status page (02:29:37) ===
+clicked at 510,639
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (420,200 1080x732)
+found after 0 s: yes: How well JobRadar finds your jobs
+shot 02-en-status-before-0
+shot 03-en-status-before-0.25
+shot 04-en-status-before-0.5
+shot 05-en-status-before-0.75
+shot 06-en-status-before-1
+     223
+resized to 1500x940
+shot 07-en-status-before-wide-0
+shot 08-en-status-before-wide-1
+resized to 1080x732
+
+=== en: judging sheet (02:29:55) ===
+revealed: Judge jobs…
+pressed
+found after 0 s: yes: Does this job fit you?
+shot 09-en-judge-1
+shot 10-en-judge-after-key-1
+pressed
+pressed
+shot 11-en-judge-after-four
+yes: 40 judged · 11 to go
+pressed
+shot 12-en-status-after-judging
+bench-after-judging.json: 1233 bytes
+
+=== en: settings, smart matching off (02:30:11) ===
+AXWindow[AXStandardWindow] "Matching ¦ com_apple_SwiftUI_Settings_window" (610,192 700x728)
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (80,60 1080x732)
+shot 13-en-matching-off-0
+shot 14-en-matching-off-0.25
+shot 15-en-matching-off-0.5
+shot 16-en-matching-off-0.75
+shot 17-en-matching-off-1
+
+=== en: turning smart matching on (02:30:22) ===
+pressed
+shot 18-en-matching-turning-on
+found after 5 s: yes: The model works: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 answered in 6.3 seconds.
+shot 19-en-matching-on-0
+shot 20-en-matching-on-0.25
+shot 21-en-matching-on-0.5
+shot 22-en-matching-on-0.75
+shot 23-en-matching-on-1
+{
+  "job_boards" : true,
+  "job_boards_error" : "",
+  "matching" : true,
+  "matching_error" : "",
+  "uv" : "0.13.7",
+  "wheel" : "28ae4baf376b137b1321eb9621bf54eced8bfa6b6eb4bf317281ca47f2a08e4e"
+}
+
+=== en: comparing the jobs (02:30:37) ===
+revealed: Compare my jobs now
+pressed
+shot 24-en-matching-comparing
+found after 11 s: yes: 58 jobs compared, 3 let through.
+shot 25-en-matching-compared-0
+shot 26-en-matching-compared-0.25
+shot 27-en-matching-compared-0.5
+shot 28-en-matching-compared-0.75
+shot 29-en-matching-compared-1
+matching-after.json: 970 bytes
+      58
+
+=== en: inbox after matching (02:31:02) ===
+clicked at 129,147
+AXWindow[AXStandardWindow] "Inbox – 41 jobs ¦ main-AppWindow-1" (80,60 1080x732)
+shot 30-en-inbox-after-matching
+yes: Semantic match
+
+=== en: a posting smart matching let through (02:31:10) ===
+promoted postings: 3
+  Analyst Lastgänge und Stromverträge · Deichstrom Analytics GmbH · quick 14 · status new
+  Ingenieur Ladepark-Planung für Lkw-Flotten · Hafenstrom GmbH · quick 14 · status new
+  Ingenieur Produktbilanzen und Ökodesign · Küstenwerk Geräte GmbH · quick 6 · status new
+opening 448cd13e5d36	Analyst Lastgänge und Stromverträge
+AXWindow[AXStandardWindow] "Inbox – 41 jobs ¦ main-AppWindow-1" (80,60 1080x732)
+yes: Semantic score 58
+shot 31-en-posting
+pressed
+screen en-verdict-menu
+pressed
+yes: Your verdict: Fits
+shot 33-en-posting-judged
+
+=== en: status page (02:31:26) ===
+clicked at 170,499
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (80,60 1080x732)
+found after 0 s: yes: How well JobRadar finds your jobs
+shot 34-en-status-after-0
+shot 35-en-status-after-0.25
+shot 36-en-status-after-0.5
+shot 37-en-status-after-0.75
+shot 38-en-status-after-1
+     233
+resized to 1500x940
+shot 39-en-status-after-wide-0
+shot 40-en-status-after-wide-1
+resized to 1080x732
+bench-after-matching.json: 1539 bytes
+summary-after.json: 1174 bytes
+engine stopped
+
+=== tr: start (02:31:45) ===
+engine listening after about 6 s
+AXWindow[AXStandardWindow] "Gelen kutusu – 41 ilan ¦ main-AppWindow-1" (80,60 1080x732)
+shot 41-tr-inbox
+
+=== tr: status page (02:31:58) ===
+clicked at 172,499
+AXWindow[AXStandardWindow] "Durum ve kaynaklar ¦ main-AppWindow-1" (80,60 1080x732)
+found after 0 s: yes: JobRadar senin ilanlarını ne kadar iyi buluyor
+shot 42-tr-status-0
+shot 43-tr-status-0.25
+shot 44-tr-status-0.5
+shot 45-tr-status-0.75
+shot 46-tr-status-1
+     233
+resized to 1500x940
+shot 47-tr-status-wide-0
+shot 48-tr-status-wide-1
+resized to 1080x732
+
+=== tr: judging sheet (02:32:17) ===
+revealed: İlanlara karar ver…
+pressed
+found after 0 s: yes: Bu ilan sana uygun mu?
+shot 49-tr-judge-1
+pressed
+
+=== tr: settings (02:32:24) ===
+AXWindow[AXStandardWindow] "Eşleştirme ¦ com_apple_SwiftUI_Settings_window" (610,192 700x728)
+AXWindow[AXStandardWindow] "Durum ve kaynaklar ¦ main-AppWindow-1" (80,60 1080x732)
+shot 50-tr-matching-0
+shot 51-tr-matching-0.25
+shot 52-tr-matching-0.5
+shot 53-tr-matching-0.75
+shot 54-tr-matching-1
+
+=== tr: a posting smart matching let through (02:32:38) ===
+promoted postings: 3
+  Analyst Lastgänge und Stromverträge · Deichstrom Analytics GmbH · quick 14 · status new
+  Ingenieur Ladepark-Planung für Lkw-Flotten · Hafenstrom GmbH · quick 14 · status new
+  Ingenieur Produktbilanzen und Ökodesign · Küstenwerk Geräte GmbH · quick 6 · status new
+opening 448cd13e5d36	Analyst Lastgänge und Stromverträge
+AXWindow[AXStandardWindow] "Gelen kutusu – 41 ilan ¦ main-AppWindow-1" (80,60 1080x732)
+yes: Anlamsal puan 58
+shot 55-tr-posting
+pressed
+screen tr-verdict-menu
+bench-tr.json: 1551 bytes
+
+=== end (02:32:49) ===
+Panel: http://127.0.0.1:8790  (durdurmak için Ctrl+C)
+engine stopped
+tour finished

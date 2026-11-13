@@ -1,0 +1,233 @@
+--- Status and sources
+41
+4
+2
+21
+66
+E-mail replies
+Profile
+Search
+Status and sources
+9 strong matches (≥ 3.5)
+15 waiting for evaluation
+1 applications due for a follow-up
+No scan yet
+Engine
+Runs on
+This Mac (started by the app)
+This Mac (started by the app)
+State
+Idle
+Idle
+Last scan
+none yet
+none yet
+AI model
+none
+none
+Waiting for evaluation
+15
+15
+Profile
+Deniz Beispiel
+Deniz Beispiel
+Version
+1.1.0
+1.1.0
+Application funnel
+New
+39
+Shortlist
+2
+Documents ready
+1
+Approved
+0
+Applied
+1
+Interview
+0
+Offer
+0
+Rejected
+0
+Sources
+Source
+Jobs
+Evaluated
+Strong
+Applied
+Avg.
+indeed
+17
+12
+7
+0
+3.8
+stepstone
+16
+2
+0
+0
+2.9
+arbeitsagentur
+10
+1
+0
+1
+3.3
+linkedin
+1
+1
+0
+1
+3.3
+greenhouse
+1
+1
+0
+0
+3.8
+freehire
+1
+1
+0
+0
+3.9
+Source health
+Every source delivered results in the last run.
+Skill gaps
+The requirements that are most often missing or only partly met in 15 jobs scored 3.0 or higher (last 120 days). Hover over a skill to see examples.
+Skill
+Jobs
+Missing
+Partly
+Required
+Simulation
+5
+5
+0
+5
+English
+4
+4
+0
+4
+Radar
+1
+1
+0
+1
+English (fluent)
+9
+0
+9
+9
+German (fluent)
+9
+0
+9
+9
+Embedded
+7
+0
+7
+7
+Zynq
+7
+0
+7
+7
+Python
+2
+0
+2
+2
+English B1
+1
+0
+1
+1
+English B2
+1
+0
+1
+1
+German B1
+1
+0
+1
+1
+German B2
+1
+0
+1
+1
+VHDL
+1
+0
+1
+1
+How well JobRadar finds your jobs
+Measured on your own verdicts: the jobs you shortlisted, applied to or skipped, and the ones you judged here. The more verdicts, the steadier the numbers.
+47 verdicts: 20 fit, 10 maybe, 17 do not fit
+Which order puts the jobs you want first?
+Order
+First 10
+First 20
+NDCG@10
+AUC
+Quick score (keywords)
+100%
+95%
+0.75
+0.83
+Semantic score
+100%
+85%
+0.73
+0.86
+Both fused (the new order)
+100%
+95%
+0.74
+0.87
+AI score (15 jobs)
+100%
+100%
+0.77
+·
+Measured on the 47 jobs that have a verdict of yours. First 10 and first 20: the share of the jobs at the top of an order that you want. NDCG@10 and AUC: how well the whole order follows your verdicts; 1.0 is perfect, and an AUC of 0.5 is chance. The first rows are measured on the same jobs, so they can be compared.
+What reaches the AI model, and what never does
+Group
+Jobs
+Judged
+You want
+Estimate
+Evaluated by the AI model
+17
+13
+13 (100%)
+~17
+Waiting for the AI model
+15
+10
+7 (70%)
+~10.5
+Quick score too low
+11
+8
+2 (25%)
+~2.8
+Matches none of your tracks
+13
+10
+4 (40%)
+~5.2
+About 8 jobs you would want never reach the AI model.
+Estimate: the share you wanted among the jobs you judged, applied to the whole group. It appears once you judged at least 5 jobs of a group.
+Does the AI model judge like you?
+On the 15 jobs that both of you judged: the same verdict on 60%. Only the AI model said yes: 0. Only you said yes: 6.
+Agreement beyond chance (kappa): 0.00. From 0.6 on it is good.
+100% of the evaluated jobs were jobs you want.
+Status and sources
