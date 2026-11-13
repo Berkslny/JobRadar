@@ -368,14 +368,20 @@ struct MeasurementPane: View {
                     .fixedSize()
                     .disabled(model.sampleData)
                 }
-                if !report.labels.enough {
+                if report.rankings.n < Self.minForRankings {
+                    Text(t("The orders are compared here once you have %@ verdicts. From about %@ on, the numbers hold still.",
+                           Self.minForRankings, report.labels.needed))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if !report.labels.enough {
                     Text(t("With fewer than %@ verdicts, or only a few of one kind, the numbers below still move a lot.", report.labels.needed))
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            if !report.rankings.rows.isEmpty {
+            if !report.rankings.rows.isEmpty && report.rankings.n >= Self.minForRankings {
                 SectionBox(title: t("Which order puts the jobs you want first?"), systemImage: "list.number", tint: .indigo) {
                     rankings
                 }
@@ -384,7 +390,7 @@ struct MeasurementPane: View {
                        systemImage: "line.3.horizontal.decrease.circle", tint: .orange) {
                 gate
             }
-            if report.judge.n > 0 {
+            if report.judge.n >= Self.minForJudge {
                 SectionBox(title: t("Does the AI model judge like you?"), systemImage: "checkmark.seal", tint: .green) {
                     judge
                 }
@@ -403,6 +409,10 @@ struct MeasurementPane: View {
             if !showLabeling { Task { await model.loadBench() } }
         }
     }
+
+    /// With fewer verdicts than this a comparison is noise and is not shown.
+    static let minForRankings = 10
+    static let minForJudge = 5
 
     /// A number or short heading of a table: never broken in the middle.
     private func cell(_ text: String) -> some View {

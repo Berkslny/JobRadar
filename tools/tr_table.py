@@ -912,6 +912,8 @@ TR.update({
         "Kendi kararlarınla ölçülür: kısa listeye aldığın, başvurduğun ya da geçtiğin ilanlar ve burada karar verdiklerin. Karar sayısı arttıkça sayılar oturur.",
     "%@ verdicts: %@ fit, %@ maybe, %@ do not fit": "%@ karar: %@ uygun, %@ belki, %@ uygun değil",
     "Judge jobs…": "İlanlara karar ver…",
+    "The orders are compared here once you have %@ verdicts. From about %@ on, the numbers hold still.":
+        "Sıralamalar burada %@ karardan sonra karşılaştırılır. Yaklaşık %@ karardan itibaren sayılar oturur.",
     "No job can be let through yet: JobRadar first needs more jobs to measure against. With a semantic score so far: %@ jobs that match your keywords (%@ needed) and %@ that do not (%@ needed).":
         "Henüz hiçbir ilan öne çıkarılamıyor: JobRadar'ın önce kıyaslayacağı daha fazla ilana ihtiyacı var. Şimdilik anlamsal puanı olanlar: anahtar kelimelerine uyan %@ ilan (gereken %@) ve uymayan %@ ilan (gereken %@).",
     "No job is let through: by meaning, the jobs your keywords turn away look like the ones they accept.":

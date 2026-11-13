@@ -7,7 +7,7 @@ nonisolated extension L10n {
     /// English text -> Turkish text.
     static let turkish: [String: String] = {
         var table: [String: String] = [:]
-        table.reserveCapacity(776)
+        table.reserveCapacity(777)
         for part in [turkish1, turkish2, turkish3, turkish4, turkish5, turkish6, turkish7, turkish8, turkish9] {
             table.merge(part) { first, _ in first }
         }
@@ -1300,6 +1300,8 @@ nonisolated extension L10n {
             "Model çalışıyor: %@ %@ saniyede yanıt verdi.",
         "The new tracks replace the ones you have now. Nothing is saved until you press Save.":
             "Yeni alanlar şimdikilerin yerini alır. Kaydet'e basana kadar hiçbir şey kaydedilmez.",
+        "The orders are compared here once you have %@ verdicts. From about %@ on, the numbers hold still.":
+            "Sıralamalar burada %@ karardan sonra karşılaştırılır. Yaklaşık %@ karardan itibaren sayılar oturur.",
         "The posting has no text.":
             "İlan metni yok.",
         "The posting may be closed":
@@ -1474,11 +1476,11 @@ nonisolated extension L10n {
             "CV ve ön yazı yazma",
         "Writing documents":
             "Belgeler yazılıyor",
-        "Writing your CV and cover letter. This can take a few minutes.":
-            "CV ve ön yazın yazılıyor. Birkaç dakika sürebilir.",
     ]
 
     private static let turkish9: [String: String] = [
+        "Writing your CV and cover letter. This can take a few minutes.":
+            "CV ve ön yazın yazılıyor. Birkaç dakika sürebilir.",
         "You":
             "Sen",
         "You are all set":
