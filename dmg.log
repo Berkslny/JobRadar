@@ -1,0 +1,67 @@
+
+=== system (02:28:36) ===
+ProductName:		macOS ProductVersion:		27.0.1 BuildVersion:		26A434 
+Xcode 27.1 Build version 27A9275 
+     0 valid identities found
+
+=== build the disk image (scripts/make-dmg.command) (02:28:37) ===
+Building JobRadar (Release). This takes a few minutes…
+No Developer ID certificate found: the app gets a local signature.
+Other Macs will ask once before they open it (see README).
+Done: /Users/runner/work/JobRadar/JobRadar/dist/JobRadar-1.1.dmg
+
+=== a fresh build of the disk image (to see that the script works on this tree) (02:29:57) ===
+--- JobRadar-1.1.dmg
+5291446 bytes
+sha256 106f28bd95eb3927810a3c3880bdf03a99c255c5d22de096fff1622b80b64236
+image verifies
+dist/JobRadar-1.1.dmg: code object is not signed at all
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+Applications
+JobRadar.app
+version 1.1 build 2 needs macOS 26.0
+architectures: x86_64 arm64
+AppIcon.icns Assets.car jobradar-1.1.0-py3-none-any.whl 
+Identifier=com.berkselenay.JobRadar
+Format=app bundle with Mach-O universal (x86_64 arm64)
+CodeDirectory v=20500 size=14681 flags=0x10002(adhoc,runtime) hashes=452+3 location=embedded
+Signature=adhoc
+TeamIdentifier=not set
+Runtime Version=27.0.0
+Sealed Resources version=2 rules=13 files=3
+signature valid (deep, strict)
+/Volumes/JobRadar/JobRadar.app: rejected
+paths of the build machine left in the app: 0 lines
+
+=== the disk image in the downloads folder (the one people get) (02:30:01) ===
+--- JobRadar-1.1.dmg
+5291453 bytes
+sha256 8233e659482a6df571720775a6222f64588bda5927af44331dee49ef72fcbf58
+image verifies
+downloads/JobRadar-1.1.dmg: code object is not signed at all
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+Applications
+JobRadar.app
+version 1.1 build 2 needs macOS 26.0
+architectures: x86_64 arm64
+AppIcon.icns Assets.car jobradar-1.1.0-py3-none-any.whl 
+Identifier=com.berkselenay.JobRadar
+Format=app bundle with Mach-O universal (x86_64 arm64)
+CodeDirectory v=20500 size=14681 flags=0x10002(adhoc,runtime) hashes=452+3 location=embedded
+Signature=adhoc
+TeamIdentifier=not set
+Runtime Version=27.0.0
+Sealed Resources version=2 rules=13 files=3
+signature valid (deep, strict)
+/Volumes/JobRadar/JobRadar.app: rejected
+paths of the build machine left in the app: 0 lines
+
+=== for comparison: the 1.0 disk image of the repository (02:30:05) ===
+not in this branch
+
+=== the engine package inside the published app, and in the repository (02:30:05) ===
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+28ae4baf376b137b1321eb9621bf54eced8bfa6b6eb4bf317281ca47f2a08e4e  /Volumes/JobRadar/JobRadar.app/Contents/Resources/jobradar-1.1.0-py3-none-any.whl
+28ae4baf376b137b1321eb9621bf54eced8bfa6b6eb4bf317281ca47f2a08e4e  JobRadar/jobradar-1.1.0-py3-none-any.whl
+the published app carries the engine of this tree
+done
