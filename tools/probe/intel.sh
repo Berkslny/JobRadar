@@ -15,7 +15,7 @@ sysctl -n machdep.cpu.brand_string
 arch -x86_64 sysctl -n hw.optional.avx2_0 2>/dev/null | sed 's/^/avx2 for x86_64 programs: /'
 
 section "install from the disk image and start the Intel half"
-install_from "$(ls "$RUNNER_TEMP"/dmg/JobRadar-*.dmg | tail -1)" || exit 1
+install_from "$NEW_DMG" || exit 1
 app_defaults
 export OPEN_ARGS="--arch x86_64"
 open -n --arch x86_64 "$APP"

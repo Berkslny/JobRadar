@@ -41,7 +41,7 @@ quit_app
 cp -R "$SUPPORT/workspace" "$RUNNER_TEMP/ws10"      # as 1.0 left it, for the engine of 1.0 further down
 
 section "1.1: install over it"
-install_from "$(ls "$RUNNER_TEMP"/dmg/JobRadar-*.dmg | tail -1)" || exit 1
+install_from "$NEW_DMG" || exit 1
 START=$SECONDS
 open -n "$APP"
 wait_engine 150

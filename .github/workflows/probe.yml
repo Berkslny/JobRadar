@@ -1,5 +1,7 @@
-# Scratch workflow of the probe branch only (never merged): builds the disk image on a Mac runner,
-# then installs it and walks through the app, once fresh and once over a 1.0 installation with data.
+# Scratch workflow of the probe branch only (never merged). It takes the disk image from the downloads
+# folder, installs it on Mac runners the way a user does and walks through the app by script:
+# fresh, over a 1.0 installation with data, and with its Intel half through Rosetta.
+# Each job keeps what it saw (screenshots, logs) as an artifact of the run.
 name: Probe
 
 on:
@@ -17,51 +19,46 @@ env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  dmg:
-    name: Build the disk image
+  image:
+    name: The disk image
     runs-on: xcode-27
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
-      - name: Build and inspect
+      - name: Build a fresh one, inspect the published one
         run: bash tools/probe/dmg.sh
       - name: Publish what was written
         if: always()
-        run: bash tools/probe/publish.sh dmg
+        run: rm -f "$RUNNER_TEMP"/out/*.dmg; bash tools/probe/publish.sh dmg
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: dmg
-          path: ${{ runner.temp }}/dmg/*.dmg
-          if-no-files-found: error
+          name: image-report
+          path: ${{ runner.temp }}/out
 
   tour:
     name: Walk through the installed app
-    needs: dmg
     runs-on: xcode-27
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
-        with:
-          name: dmg
-          path: ${{ runner.temp }}/dmg
       - name: Run the tour
         run: bash tools/probe/tour.sh
       - name: Publish what was written
         if: always()
         run: bash tools/probe/publish.sh tour
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tour-screens
+          path: ${{ runner.temp }}/out
 
   upgrade:
     name: Update a 1.0 installation that has data
-    needs: dmg
     runs-on: xcode-27
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
-        with:
-          name: dmg
-          path: ${{ runner.temp }}/dmg
       - name: Get the 1.0 disk image from main
         run: |
           git fetch -q --depth 1 origin main
@@ -73,20 +70,25 @@ jobs:
       - name: Publish what was written
         if: always()
         run: bash tools/probe/publish.sh upgrade
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: upgrade-screens
+          path: ${{ runner.temp }}/out
 
   intel:
     name: The Intel half of the app, through Rosetta
-    needs: dmg
     runs-on: xcode-27
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v4
-        with:
-          name: dmg
-          path: ${{ runner.temp }}/dmg
       - name: Run the Intel walk
         run: bash tools/probe/intel.sh
       - name: Publish what was written
         if: always()
         run: bash tools/probe/publish.sh intel
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: intel-screens
+          path: ${{ runner.temp }}/out

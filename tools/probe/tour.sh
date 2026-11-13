@@ -82,7 +82,7 @@ posting() {  # posting full|look
 prepare_tools
 
 section "install from the disk image"
-install_from "$(ls "$RUNNER_TEMP"/dmg/JobRadar-*.dmg | tail -1)" || exit 1
+install_from "$NEW_DMG" || exit 1
 
 section "first start: the app installs its engine"
 app_defaults

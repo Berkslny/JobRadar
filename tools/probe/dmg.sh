@@ -41,14 +41,18 @@ mkdir -p "$RUNNER_TEMP/dmg"
 cp "$DMG" "$RUNNER_TEMP/dmg/"
 cp "$DMG" "$OUT/"
 
-section "the new disk image"
+section "a fresh build of the disk image (to see that the script works on this tree)"
 look "$DMG"
+
+section "the disk image in the downloads folder (the one people get)"
+look "$(ls downloads/JobRadar-1.1*.dmg | tail -1)"
 
 section "for comparison: the 1.0 disk image of the repository"
 if [ -f downloads/JobRadar-1.0.dmg ]; then look downloads/JobRadar-1.0.dmg; else echo "not in this branch"; fi
 
-section "the engine package inside the new app"
-MOUNT=$(hdiutil attach -nobrowse -readonly "$DMG" | awk -F'\t' '/\/Volumes\// {print $NF}' | tail -1)
+section "the engine package inside the published app, and in the repository"
+MOUNT=$(hdiutil attach -nobrowse -readonly "$(ls downloads/JobRadar-1.1*.dmg | tail -1)" | awk -F'\t' '/\/Volumes\// {print $NF}' | tail -1)
 shasum -a 256 "$MOUNT/JobRadar.app/Contents/Resources/"jobradar-*.whl JobRadar/jobradar-*.whl
+cmp "$MOUNT/JobRadar.app/Contents/Resources/"jobradar-*.whl JobRadar/jobradar-*.whl && echo "the published app carries the engine of this tree"
 hdiutil detach "$MOUNT" -quiet || true
 echo "done"

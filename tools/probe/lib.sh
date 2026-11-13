@@ -10,6 +10,9 @@ SUPPORT="$HOME/Library/Application Support/JobRadar"
 PORT=8790
 N=0
 LANG_NOW=en
+# the disk image under test: the one in the repository's downloads folder
+NEW_DMG="$(ls "$ROOT"/downloads/JobRadar-1.1*.dmg | tail -1)"
+echo "disk image under test: $(basename "$NEW_DMG") sha256 $(shasum -a 256 "$NEW_DMG" | cut -c1-64)"
 
 section() { echo; echo "=== $* ($(date +%H:%M:%S)) ==="; }
 ax() { "$RUNNER_TEMP/ax" "$@" 2>&1; }
