@@ -58,7 +58,10 @@ Uygulama açıkken menü çubuğunda durur ve 08:00, 13:00, 19:00'da tarama yapa
 **Önceki sürümden güncelleme.** JobRadar'dan çık (menü çubuğu penceresindeki düğme), yeni disk görüntüsünü
 indir ve JobRadar'ı yeniden Uygulamalar klasörüne sürükleyip eskisinin yerine koy. Verilerin olduğu yerde
 kalır. Yeni sürüm ilk açılışta motorunu günceller; macOS da her indirmeyi yeni bir uygulama saydığı için
-bir kez daha **Yine de Aç** ister.
+bir kez daha **Yine de Aç** ister. Aynı nedenle, JobRadar senin için bir gizli bilgi saklıyorsa (API
+anahtarı, e-posta uygulama şifresi, sunucunun anahtarı) macOS yeni kopyanın onu okuyabilmesi için oturum
+şifreni sorar. **Her Zaman İzin Ver**'i seç; her gizli bilgi için bir kez sorar ve JobRadar sen
+yanıtladıktan sonra devam eder.
 
 ## Verilerin nerede
 
