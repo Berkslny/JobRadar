@@ -1137,7 +1137,13 @@ struct MatchingState: Codable, Hashable {
     var lastEmbedded: Int? = nil
     var lastWaiting: Int? = nil
     var lastPromoted: Int? = nil
+    /// The semantic score a posting needs to be let through; nil while it cannot be measured.
     var threshold: Double? = nil
+    /// Postings with a semantic score that the keyword rules accept, and that they turn away, in the last run.
+    var lastReference: Int? = nil
+    var lastBackground: Int? = nil
+    var referenceNeeded: Int? = nil
+    var backgroundNeeded: Int? = nil
     var providers: [String] = []
     var models: [MatchingModelOption] = []
     var defaultModels: [String: String] = [:]

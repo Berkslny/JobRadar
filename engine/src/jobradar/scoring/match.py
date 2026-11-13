@@ -43,6 +43,7 @@ RRF_K = 60
 MIN_REFERENCE = 20      # keyword matches with a semantic score needed before a bar for promotion is measured
 MIN_BACKGROUND = 10     # … and this many postings the keyword rules turn away
 MIN_GAP = 0.02          # the two groups must lie at least this far apart, or meaning tells nothing here
+REFERENCE_SAMPLE = 300  # evaluated keyword matches (the newest) that get a score just to measure the bar on
 HEAVY_PENALTY = -15.0   # a quick score lowered this much by a requirement is low for a reason: no promotion
 HYSTERESIS = 0.9        # a promoted posting is taken back only when it falls clearly below the bar
 JOBS_PER_BATCH = 12
@@ -356,6 +357,10 @@ def _stale_jobs(conn: sqlite3.Connection, cfg: AppConfig, model: str) -> list[tu
         selections += [
             ("status = 'new' AND llm_score IS NULL AND prescore < ? ORDER BY prescore DESC", (minimum,)),
             ("status = 'filtered' AND filtered_reason IN (?, ?) ORDER BY first_seen DESC", track_only_reasons()),
+            # the yardstick for promotions: what the keyword rules accepted. Without these, an installation
+            # whose postings are all evaluated already would have no bar until enough new ones arrive
+            ("status != 'filtered' AND llm_score IS NOT NULL AND prescore >= ? ORDER BY first_seen DESC LIMIT ?",
+             (minimum, REFERENCE_SAMPLE)),
         ]
     todo: list[tuple[str, str]] = []
     seen: set[str] = set()

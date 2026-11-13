@@ -7,7 +7,7 @@ nonisolated extension L10n {
     /// English text -> Turkish text.
     static let turkish: [String: String] = {
         var table: [String: String] = [:]
-        table.reserveCapacity(774)
+        table.reserveCapacity(777)
         for part in [turkish1, turkish2, turkish3, turkish4, turkish5, turkish6, turkish7, turkish8, turkish9] {
             table.merge(part) { first, _ in first }
         }
@@ -809,6 +809,10 @@ nonisolated extension L10n {
             "Yapay zeka modeli bağlı değil; alanlar yalnızca senin kelimelerinden oluşturulur. Bir modelle çok daha iyi anahtar kelimeler çıkar.",
         "No free local port was found between 8790 and 8799. Close the program that uses them and try again.":
             "8790 ile 8799 arasında boş bir yerel port bulunamadı. Bu portları kullanan programı kapatıp tekrar dene.",
+        "No job can be let through yet: JobRadar first needs more jobs to measure against. With a semantic score so far: %@ jobs that match your keywords (%@ needed) and %@ that do not (%@ needed).":
+            "Henüz hiçbir ilan öne çıkarılamıyor: JobRadar'ın önce kıyaslayacağı daha fazla ilana ihtiyacı var. Şimdilik anlamsal puanı olanlar: anahtar kelimelerine uyan %@ ilan (gereken %@) ve uymayan %@ ilan (gereken %@).",
+        "No job is let through: by meaning, the jobs your keywords turn away look like the ones they accept.":
+            "Hiçbir ilan öne çıkarılmıyor: anlam bakımından, anahtar kelimelerinin elediği ilanlar kabul ettiklerine benziyor.",
         "No jobs here":
             "İlan yok",
         "No match: choose the job…":
@@ -923,13 +927,13 @@ nonisolated extension L10n {
             "Bir ilanın adresini yapıştır: LinkedIn, Indeed, StepStone, şirket kariyer sayfası… JobRadar ilanı okuyup gelen kutuna ekler.",
         "Paste your API key":
             "API anahtarını yapıştır",
+    ]
+
+    private static let turkish6: [String: String] = [
         "Pay":
             "Ücret",
         "Phone":
             "Telefon",
-    ]
-
-    private static let turkish6: [String: String] = [
         "Pick a posting from the list to see its evaluation.":
             "Listeden bir ilan seçince değerlendirmesi burada görünür.",
         "Place":
@@ -1106,13 +1110,13 @@ nonisolated extension L10n {
             "Sunucu",
         "Servers":
             "Sunucular",
+    ]
+
+    private static let turkish7: [String: String] = [
         "Service":
             "Servis",
         "Service token client ID":
             "Servis anahtarı Client ID",
-    ]
-
-    private static let turkish7: [String: String] = [
         "Service token client secret":
             "Servis anahtarı Client Secret",
         "Setting up the JobRadar engine":
@@ -1289,13 +1293,15 @@ nonisolated extension L10n {
             "Model bir kez Hugging Face'ten indirilir, sonra bu Mac'te çalışır. Bunun için profilin ve ilanlar hiçbir yere gönderilmez.",
         "The model is not ready yet. Check the fields above.":
             "Model henüz hazır değil. Yukarıdaki alanları kontrol et.",
+    ]
+
+    private static let turkish8: [String: String] = [
         "The model works: %@ answered in %@ seconds.":
             "Model çalışıyor: %@ %@ saniyede yanıt verdi.",
         "The new tracks replace the ones you have now. Nothing is saved until you press Save.":
             "Yeni alanlar şimdikilerin yerini alır. Kaydet'e basana kadar hiçbir şey kaydedilmez.",
-    ]
-
-    private static let turkish8: [String: String] = [
+        "The orders are compared here once you have %@ verdicts. From about %@ on, the numbers hold still.":
+            "Sıralamalar burada %@ karardan sonra karşılaştırılır. Yaklaşık %@ karardan itibaren sayılar oturur.",
         "The posting has no text.":
             "İlan metni yok.",
         "The posting may be closed":
@@ -1470,15 +1476,15 @@ nonisolated extension L10n {
             "CV ve ön yazı yazma",
         "Writing documents":
             "Belgeler yazılıyor",
+    ]
+
+    private static let turkish9: [String: String] = [
         "Writing your CV and cover letter. This can take a few minutes.":
             "CV ve ön yazın yazılıyor. Birkaç dakika sürebilir.",
         "You":
             "Sen",
         "You are all set":
             "Her şey hazır",
-    ]
-
-    private static let turkish9: [String: String] = [
         "You have unsaved changes.":
             "Kaydedilmemiş değişikliklerin var.",
         "You want":

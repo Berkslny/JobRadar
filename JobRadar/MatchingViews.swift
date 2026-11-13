@@ -112,6 +112,11 @@ struct MatchingSettings: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    if let hint = Self.barHint(state) {
+                        Text(hint)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     if !state.lastError.isEmpty {
                         Banner(kind: .warning, text: state.lastError)
                     }
@@ -144,6 +149,19 @@ struct MatchingSettings: View {
                    ? t("The engine does not have the matching package yet.")
                    : t("The server has no matching package installed (pip install 'jobradar[match]')."))
         }
+    }
+
+    /// Why nothing can be let through yet; nil when a bar exists or promotion is off.
+    static func barHint(_ state: MatchingState) -> String? {
+        guard state.enabled, state.promote, !state.lastRun.isEmpty, state.threshold == nil,
+              let reference = state.lastReference, let background = state.lastBackground else { return nil }
+        let referenceNeeded = state.referenceNeeded ?? 20
+        let backgroundNeeded = state.backgroundNeeded ?? 10
+        if reference < referenceNeeded || background < backgroundNeeded {
+            return t("No job can be let through yet: JobRadar first needs more jobs to measure against. With a semantic score so far: %@ jobs that match your keywords (%@ needed) and %@ that do not (%@ needed).",
+                     reference, referenceNeeded, background, backgroundNeeded)
+        }
+        return t("No job is let through: by meaning, the jobs your keywords turn away look like the ones they accept.")
     }
 
     private static func title(_ option: MatchingModelOption) -> String {
@@ -350,14 +368,20 @@ struct MeasurementPane: View {
                     .fixedSize()
                     .disabled(model.sampleData)
                 }
-                if !report.labels.enough {
+                if report.rankings.n < Self.minForRankings {
+                    Text(t("The orders are compared here once you have %@ verdicts. From about %@ on, the numbers hold still.",
+                           Self.minForRankings, report.labels.needed))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if !report.labels.enough {
                     Text(t("With fewer than %@ verdicts, or only a few of one kind, the numbers below still move a lot.", report.labels.needed))
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            if !report.rankings.rows.isEmpty {
+            if !report.rankings.rows.isEmpty && report.rankings.n >= Self.minForRankings {
                 SectionBox(title: t("Which order puts the jobs you want first?"), systemImage: "list.number", tint: .indigo) {
                     rankings
                 }
@@ -366,7 +390,7 @@ struct MeasurementPane: View {
                        systemImage: "line.3.horizontal.decrease.circle", tint: .orange) {
                 gate
             }
-            if report.judge.n > 0 {
+            if report.judge.n >= Self.minForJudge {
                 SectionBox(title: t("Does the AI model judge like you?"), systemImage: "checkmark.seal", tint: .green) {
                     judge
                 }
@@ -385,6 +409,10 @@ struct MeasurementPane: View {
             if !showLabeling { Task { await model.loadBench() } }
         }
     }
+
+    /// With fewer verdicts than this a comparison is noise and is not shown.
+    static let minForRankings = 10
+    static let minForJudge = 5
 
     /// A number or short heading of a table: never broken in the middle.
     private func cell(_ text: String) -> some View {
