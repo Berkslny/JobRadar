@@ -140,7 +140,9 @@ class MatchingConfig(BaseModel):
     chunk_chars: int = Field(700, ge=200, le=4000)
     profile_weight: float = Field(0.35, ge=0, le=1)  # share of "what you have done" next to "what you look for"
     promote: bool = True          # let a strong semantic match pass the keyword rules
-    promote_percentile: int = Field(50, ge=5, le=95)  # the bar: semantic score above this share of keyword matches
+    # the bar for a promotion, between the typical semantic score of the postings the keyword rules turn
+    # away (0) and that of the postings they accept (1); lower lets more through
+    promote_bar: float = Field(0.5, ge=0.05, le=1.0)
     promote_min_similarity: float = Field(0.0, ge=0, le=1)  # > 0: a fixed bar instead of the measured one
     promote_max_per_run: int = Field(5, ge=0, le=200)
     # time a scan may spend on embedding new postings (a quick scan: a third of it)

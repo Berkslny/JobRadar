@@ -471,8 +471,14 @@ def match_cmd(config: Optional[Path] = ConfigOpt,
             except embed.EmbedError as exc:
                 console.print(f"[red]{exc}[/red]")
                 raise typer.Exit(1)
-            bar = f"{rep.threshold:.2f} ({rep.reference} ilan üzerinden)" if rep.threshold is not None else \
-                f"henüz yok ({rep.reference}/{match.MIN_REFERENCE} anahtar kelime eşleşmesi)"
+            if rep.threshold is not None:
+                bar = f"{rep.threshold:.2f}" + (f" ({rep.reference} kabul edilen, {rep.background} elenen ilan üzerinden)"
+                                                if rep.reference else " (ayarda verildi)")
+            elif not cfg.matching.promote:
+                bar = "yok (öne çıkarma kapalı)"
+            else:
+                bar = (f"henüz yok ({rep.reference}/{match.MIN_REFERENCE} anahtar kelime eşleşmesi, "
+                       f"{rep.background}/{match.MIN_BACKGROUND} elenen ilan; ya da iki grup birbirinden ayrışmıyor)")
             console.print(f"[green]✓[/green] {rep.embedded} ilan işlendi, {rep.scored} puanlandı, {rep.promoted} öne "
                           f"çıkarıldı, {rep.demoted} geri alındı · eşik {bar} · {rep.seconds:g} sn"
                           + (f" · {rep.waiting} ilan sonraki çalıştırmaya kaldı" if rep.waiting else ""))

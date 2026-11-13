@@ -7,8 +7,10 @@ What it adds to the keyword rules:
 2. The order of the AI evaluations: keyword rank and semantic rank are fused (reciprocal rank fusion), so the
    evaluation budget goes first to the postings both signals agree on.
 3. Promotion: a posting the keyword rules would never hand to the AI model (no keyword ties it to a track, or
-   its quick score is low) is let through when its semantic score is as high as that of the postings that do
-   match keywords. Rules you set yourself (title words, seniority, employment type ...) are never overridden.
+   its quick score is low) is let through when its semantic score is closer to that of the postings that do
+   match keywords than to that of the other postings they turn away. Rules you set yourself (title words,
+   seniority, employment type ...) are never overridden, and a posting whose quick score a requirement lowered
+   (language, years of experience ...) is not a candidate.
 
 Vectors are kept in SQLite (table `embeddings`), scores in `job_match`. The arithmetic is plain Python, so the
 engine needs no numpy of its own.
@@ -22,6 +24,7 @@ import re
 import sqlite3
 import time
 from dataclasses import asdict, dataclass
+from statistics import median
 from typing import Any, Callable, Optional, Sequence
 
 from jobradar import db
@@ -38,6 +41,9 @@ Log = Callable[[str], None]
 
 RRF_K = 60
 MIN_REFERENCE = 20      # keyword matches with a semantic score needed before a bar for promotion is measured
+MIN_BACKGROUND = 10     # … and this many postings the keyword rules turn away
+MIN_GAP = 0.02          # the two groups must lie at least this far apart, or meaning tells nothing here
+HEAVY_PENALTY = -15.0   # a quick score lowered this much by a requirement is low for a reason: no promotion
 HYSTERESIS = 0.9        # a promoted posting is taken back only when it falls clearly below the bar
 JOBS_PER_BATCH = 12
 META_LAST = "matching_last_run"
@@ -56,6 +62,7 @@ class MatchReport:
     demoted: int = 0
     threshold: Optional[float] = None
     reference: int = 0            # keyword matches the threshold was measured on
+    background: int = 0           # postings the keyword rules turn away that it was measured on
     seconds: float = 0.0
     note: str = ""
 
@@ -439,51 +446,80 @@ def _score_jobs(conn: sqlite3.Connection, cfg: AppConfig, model: str, qhash: str
 # ---------------------------------------------------------------------------
 
 
-def percentile(values: Sequence[float], pct: float) -> float:
-    ordered = sorted(values)
-    if len(ordered) == 1:
-        return ordered[0]
-    pos = (len(ordered) - 1) * max(0.0, min(100.0, pct)) / 100.0
-    low = int(pos)
-    high = min(low + 1, len(ordered) - 1)
-    return ordered[low] + (ordered[high] - ordered[low]) * (pos - low)
+def _penalty(detail: Any) -> float:
+    """Points the quick score lost to requirements of the posting (language, years, citizenship …).
+    Takes the details of the quick score as stored (JSON) or as a dict."""
+    if isinstance(detail, str):
+        try:
+            detail = json.loads(detail)
+        except ValueError:
+            return 0.0
+    total = 0.0
+    for item in (detail.get("penalties") if isinstance(detail, dict) else None) or []:
+        try:
+            total += float(item[1])
+        except (TypeError, ValueError, IndexError):
+            continue
+    return total
 
 
-def promotion_bar(conn: sqlite3.Connection, cfg: AppConfig, model: str, qhash: str) -> tuple[Optional[float], int]:
-    """The semantic score a posting needs to be promoted, and on how many keyword matches that was measured.
+def _turned_away(conn: sqlite3.Connection, cfg: AppConfig, model: str, qhash: str) -> list[sqlite3.Row]:
+    """Postings with a current score that the keyword rules turn away for want of keywords.
 
-    The bar is a percentile of the semantic score of the postings the keyword rules already accept; with
-    too few of them there is no bar yet and nothing is promoted."""
+    Only the track rule filtered them, or their quick score is below the minimum without a requirement
+    (language, years …) having lowered it. Postings promoted earlier still count: the bar must not move
+    because of what it let through. Highest semantic score first."""
+    rows = conn.execute(
+        """SELECT j.id, j.prescore_json, m.semantic, m.best_track, m.promoted FROM jobs j
+           JOIN job_match m ON m.job_id = j.id
+           WHERE m.model = ? AND m.query_hash = ?
+             AND (m.promoted = 1
+                  OR (j.status = 'filtered' AND j.filtered_reason IN (?, ?))
+                  OR (j.status = 'new' AND j.llm_score IS NULL AND j.prescore < ?))
+           ORDER BY m.semantic DESC, j.id""",
+        (model, qhash, *track_only_reasons(), cfg.scoring.prescore_min)).fetchall()
+    return [r for r in rows if r["promoted"] or _penalty(r["prescore_json"]) > HEAVY_PENALTY]
+
+
+def promotion_bar(conn: sqlite3.Connection, cfg: AppConfig, model: str, qhash: str) -> tuple[Optional[float], int, int]:
+    """The semantic score a posting needs to be promoted, and on how many postings it was measured:
+    (bar, keyword matches, postings turned away).
+
+    The bar lies between the typical semantic score of the postings the keyword rules turn away and that of
+    the postings they accept; `promote_bar` says where (0.5: half way). One group alone is no yardstick:
+    postings that match keywords share words with the tracks, so nearly all of them score higher than a
+    posting that says the same in other words. With too few postings in either group, or when the groups do
+    not differ, there is no bar and nothing is promoted."""
     mc = cfg.matching
     if mc.promote_min_similarity > 0:
-        return mc.promote_min_similarity, 0
-    sims = [float(r[0]) for r in conn.execute(
+        return mc.promote_min_similarity, 0, 0
+    accepted = [float(r[0]) for r in conn.execute(
         """SELECT m.semantic FROM job_match m JOIN jobs j ON j.id = m.job_id
            WHERE m.model = ? AND m.query_hash = ? AND m.promoted = 0 AND j.status != 'filtered' AND j.prescore >= ?""",
         (model, qhash, cfg.scoring.prescore_min))]
-    if len(sims) < MIN_REFERENCE:
-        return None, len(sims)
-    return round(percentile(sims, mc.promote_percentile), 4), len(sims)
+    away = [float(r["semantic"]) for r in _turned_away(conn, cfg, model, qhash)]
+    if len(accepted) < MIN_REFERENCE or len(away) < MIN_BACKGROUND:
+        return None, len(accepted), len(away)
+    high, low = median(accepted), median(away)
+    if high - low < MIN_GAP:
+        return None, len(accepted), len(away)
+    return round(low + (high - low) * mc.promote_bar, 4), len(accepted), len(away)
 
 
 def _promote(conn: sqlite3.Connection, cfg: AppConfig, proc: Any, model: str, qhash: str, bar: float) -> int:
     limit = cfg.matching.promote_max_per_run
     if limit <= 0:
         return 0
-    rows = conn.execute(
-        """SELECT j.*, m.semantic AS m_semantic, m.best_track AS m_best_track FROM jobs j
-           JOIN job_match m ON m.job_id = j.id
-           WHERE m.model = ? AND m.query_hash = ? AND m.promoted = 0 AND m.semantic >= ?
-             AND ((j.status = 'filtered' AND j.filtered_reason IN (?, ?))
-                  OR (j.status = 'new' AND j.llm_score IS NULL AND j.prescore < ?))
-           ORDER BY m.semantic DESC, j.id LIMIT ?""",
-        (model, qhash, bar, *track_only_reasons(), cfg.scoring.prescore_min, limit * 8 + 20)).fetchall()
     promoted = 0
-    for r in rows:
-        if promoted >= limit:
+    for r in _turned_away(conn, cfg, model, qhash):
+        if promoted >= limit or float(r["semantic"]) < bar:
             break
-        job = db.row_to_job(r)
-        sim, track = float(job.pop("m_semantic")), job.pop("m_best_track")
+        if r["promoted"]:
+            continue
+        job = db.get_job(conn, r["id"])
+        if job is None:
+            continue
+        sim, track = float(r["semantic"]), r["best_track"]
         flags = dict(job.get("flags") or {})
         flags["semantic"] = {"promoted": True, "track": track, "sim": round(sim, 3)}
         job["flags"] = flags
@@ -513,18 +549,22 @@ def _unpromote(conn: sqlite3.Connection, proc: Any, job: dict[str, Any], why: st
 
 
 def _demote(conn: sqlite3.Connection, proc: Any, changed: set[str], bar: float) -> int:
-    """Postings promoted earlier whose score changed (new description, other tracks) and fell below the bar."""
+    """Postings promoted earlier whose score changed (new description, other tracks) and that fell below the
+    bar, or whose full text turned out to ask for something that lowers the quick score a lot."""
     demoted = 0
     rows = conn.execute("SELECT j.*, m.semantic AS m_semantic FROM jobs j JOIN job_match m ON m.job_id = j.id "
                         "WHERE m.promoted = 1").fetchall()
     for r in rows:
         job = db.row_to_job(r)
         sim = float(job.pop("m_semantic"))
-        if job["id"] not in changed or sim >= bar * HYSTERESIS:
+        if job["id"] not in changed:
+            continue
+        penalty = _penalty(job.get("prescore_detail"))
+        if sim >= bar * HYSTERESIS and penalty > HEAVY_PENALTY:
             continue
         if job.get("status") != "new" or job.get("llm_score") is not None:
             continue  # evaluated or handled by you: it stays
-        _unpromote(conn, proc, job, f"{sim:.2f} < {bar:.2f}")
+        _unpromote(conn, proc, job, f"{sim:.2f} < {bar:.2f}" if sim < bar * HYSTERESIS else f"{penalty:g}")
         demoted += 1
     conn.commit()
     return demoted
@@ -575,8 +615,8 @@ def run_matching(conn: sqlite3.Connection, cfg: AppConfig, profile: Profile, emb
     changed = _score_jobs(conn, cfg, model, qhash, queries)
     report.scored = len(changed)
     if cfg.matching.promote:
-        bar, reference = promotion_bar(conn, cfg, model, qhash)
-        report.threshold, report.reference = bar, reference
+        bar, reference, background = promotion_bar(conn, cfg, model, qhash)
+        report.threshold, report.reference, report.background = bar, reference, background
         if bar is not None:
             proc = Processor(cfg, profile)
             report.demoted = _demote(conn, proc, changed, bar)

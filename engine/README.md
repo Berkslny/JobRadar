@@ -56,9 +56,12 @@ kept in SQLite; the arithmetic is plain Python. Two things change when it is on:
 - The order of the AI evaluations fuses the keyword rank and the semantic rank
   (reciprocal rank fusion, `1/(60+rank)` each).
 - A posting that only the track rule filtered out, or whose quick score is below `prescore_min`, is promoted
-  when its semantic score is above the median of the postings that do match keywords (at least 20 of those
-  are needed, at most `promote_max_per_run` per scan). Rules you set yourself are never overridden, and a
-  promoted posting carries the "Semantic match" badge.
+  when its semantic score is closer to the typical score of the postings that match keywords than to the
+  typical score of the other postings the keyword rules turn away (`promote_bar: 0.5` is half way between
+  the two medians; at least 20 postings of the first kind and 10 of the second are needed; at most
+  `promote_max_per_run` per scan). Rules you set yourself are never overridden, a posting whose quick score
+  a requirement lowered (language, years of experience, citizenship) is not a candidate, and a promoted
+  posting carries the "Semantic match" badge.
 
 The built-in model is downloaded once from Hugging Face into `data/models`. An embedding model of a local
 Ollama (`provider: ollama`) or any OpenAI-compatible `/embeddings` endpoint works as well; a paid endpoint
