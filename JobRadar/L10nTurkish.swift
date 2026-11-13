@@ -7,7 +7,7 @@ nonisolated extension L10n {
     /// English text -> Turkish text.
     static let turkish: [String: String] = {
         var table: [String: String] = [:]
-        table.reserveCapacity(772)
+        table.reserveCapacity(774)
         for part in [turkish1, turkish2, turkish3, turkish4, turkish5, turkish6, turkish7, turkish8, turkish9] {
             table.merge(part) { first, _ in first }
         }
@@ -105,10 +105,6 @@ nonisolated extension L10n {
             "Yapay zeka puanı (0 ile 5 arası)",
         "API key":
             "API anahtarı",
-        "AUC: 0.5 is chance, 1.0 is perfect. The first rows are measured on the same jobs, so they can be compared.":
-            "AUC: 0,5 rastgele, 1,0 kusursuz demektir. İlk satırlar aynı ilanlar üzerinde ölçülür, bu yüzden birbirleriyle karşılaştırılabilir.",
-        "AUC: 0.5 is chance, 1.0 is perfect. Turn on smart matching in Settings to compare it with the keyword order here.":
-            "AUC: 0,5 rastgele, 1,0 kusursuz demektir. Akıllı eşleştirmeyi Ayarlar'dan açarsan burada anahtar kelime sıralamasıyla karşılaştırılır.",
         "About":
             "Hakkında",
         "About %@ jobs you would want never reach the AI model.":
@@ -190,18 +186,18 @@ nonisolated extension L10n {
         "Advanced":
             "Gelişmiş",
         "Agreement beyond chance (kappa): %@. From 0.6 on it is good.":
-            "Şansın ötesinde uyum (kappa): %@. 0,6 ve üstü iyidir.",
+            "Şansın ötesinde uyum (kappa): %@. 0.6 ve üstü iyidir.",
         "All":
             "Tümü",
         "All tracks":
             "Tüm alanlar",
-    ]
-
-    private static let turkish2: [String: String] = [
         "Almost there":
             "Az kaldı",
         "An embedding model of Ollama, for example bge-m3. Download it in Ollama first.":
             "Ollama'daki bir embedding modeli, örneğin bge-m3. Önce Ollama'da indir.",
+    ]
+
+    private static let turkish2: [String: String] = [
         "Answer each question once. On every job page you can copy the answers into the application form. Rows you leave empty are not shown.":
             "Her soruyu bir kez cevapla. Her ilan sayfasında cevapları başvuru formuna kopyalayabilirsin. Boş bıraktığın satırlar gösterilmez.",
         "Anthropic API":
@@ -378,13 +374,13 @@ nonisolated extension L10n {
             "Kopyala",
         "Copy and paste while you fill in the application form.":
             "Başvuru formunu doldururken kopyala, yapıştır.",
-    ]
-
-    private static let turkish3: [String: String] = [
         "Copy the bookmark code":
             "Yer imi kodunu kopyala",
         "Copy the code and make it the address of a bookmark. On any job posting, click that bookmark: JobRadar opens and offers to add the posting. Chrome: right-click the bookmarks bar > Add page, and paste the code as the URL. Safari: bookmark any page, then edit the bookmark's address and paste the code.":
             "Kodu kopyala ve bir yer iminin adresi yap. Herhangi bir ilan sayfasındayken o yer imine tıkla: JobRadar açılır ve ilanı eklemeyi önerir. Chrome: yer imleri çubuğuna sağ tık > Sayfa ekle, kodu URL alanına yapıştır. Safari: herhangi bir sayfayı yer imine ekle, sonra yer iminin adresini düzenleyip kodu yapıştır.",
+    ]
+
+    private static let turkish3: [String: String] = [
         "Could not be installed. You can try again under Search.":
             "Kurulamadı. Arama bölümünden tekrar deneyebilirsin.",
         "Could not reach JobRadar: %@":
@@ -431,8 +427,8 @@ nonisolated extension L10n {
             "Belgeler",
         "Does not fit":
             "Uygun değil",
-        "Does the AI model judge like you? (%@ jobs)":
-            "Yapay zeka modeli senin gibi mi karar veriyor? (%@ ilan)",
+        "Does the AI model judge like you?":
+            "Yapay zeka modeli senin gibi mi karar veriyor?",
         "Does this job fit you?":
             "Bu ilan sana uygun mu?",
         "Done":
@@ -485,6 +481,8 @@ nonisolated extension L10n {
             "Hata: %@",
         "Estimate":
             "Tahmin",
+        "Estimate: the share you wanted among the jobs you judged, applied to the whole group. It appears once you judged at least 5 jobs of a group.":
+            "Tahmin: karar verdiğin ilanlar içinde istediklerinin payı, grubun tamamına uygulanır. Bir gruptan en az 5 ilana karar verince görünür.",
         "Evaluate":
             "Değerlendir",
         "Evaluate again":
@@ -523,6 +521,10 @@ nonisolated extension L10n {
             "Elenme nedeni: %@",
         "Fine tuning":
             "İnce ayar",
+        "First %@":
+            "İlk %@",
+        "First 10":
+            "İlk 10",
         "Fit with your goal":
             "Hedefe uygunluk",
         "Fits":
@@ -559,11 +561,11 @@ nonisolated extension L10n {
             "Serbest",
         "Frosted":
             "Buzlu cam",
-        "Full-time":
-            "Tam zamanlı",
     ]
 
     private static let turkish4: [String: String] = [
+        "Full-time":
+            "Tam zamanlı",
         "Gaps":
             "Eksikler",
         "General":
@@ -682,20 +684,20 @@ nonisolated extension L10n {
             "İlanlar yine toplanır ve sıralanır, ama değerlendirilmez ve belge yazılmaz.",
         "Jobs with a semantic score":
             "Anlamsal puanı olan ilanlar",
-        "Judge at least 5 jobs of a group to see what share of it you want.":
-            "Bir grubun ne kadarını istediğini görmek için o gruptan en az 5 ilana karar ver.",
         "Judge jobs…":
             "İlanlara karar ver…",
         "Judge the posting as if you had just found it yourself. Scores are hidden on purpose. The jobs are drawn from everything JobRadar collected, including what its rules filtered out, so the numbers show what the rules miss.":
             "İlana, onu az önce kendin bulmuşsun gibi karar ver. Puanlar bilerek gizlendi. İlanlar JobRadar'ın topladığı her şeyden seçilir, kuralların elediği ilanlar da dahil; böylece sayılar kuralların neyi kaçırdığını gösterir.",
-        "Judged by you":
-            "Karar verdiğin",
+        "Judged":
+            "Karar verilen",
         "Just looking?":
             "Sadece bakmak mı istiyorsun?",
         "Keep only postings whose title fits a track":
             "Yalnızca başlığı bir alana uyan ilanları tut",
         "Key %@":
             "%@ tuşu",
+        "Keys 1, 2 and 3 choose Fits, Maybe and Does not fit.":
+            "1, 2 ve 3 tuşları Uygun, Belki ve Uygun değil kararını verir.",
         "Kind":
             "Tür",
         "Kinds of employment":
@@ -742,11 +744,11 @@ nonisolated extension L10n {
             "Model listesini yükle",
         "Loading the model. The first time it is downloaded, which can take a few minutes.":
             "Model yükleniyor. İlk seferde indirilir; bu birkaç dakika sürebilir.",
-        "Loading…":
-            "Yükleniyor…",
     ]
 
     private static let turkish5: [String: String] = [
+        "Loading…":
+            "Yükleniyor…",
         "Look around with sample data":
             "Örnek verilerle göz at",
         "Look for new jobs now (⇧⌘R)":
@@ -769,6 +771,8 @@ nonisolated extension L10n {
             "Eşleştirme",
         "Maybe":
             "Belki",
+        "Measured on the %@ jobs that have a verdict of yours. First 10 and first %@: the share of the jobs at the top of an order that you want. NDCG@10 and AUC: how well the whole order follows your verdicts; 1.0 is perfect, and an AUC of 0.5 is chance.":
+            "Karar verdiğin %@ ilan üzerinde ölçülür. İlk 10 ve ilk %@: bir sıralamanın en üstündeki ilanların ne kadarını istediğin. NDCG@10 ve AUC: sıralamanın tamamı kararlarına ne kadar uyuyor; 1.0 kusursuz, AUC için 0.5 rastgele demektir.",
         "Measured on your own verdicts: the jobs you shortlisted, applied to or skipped, and the ones you judged here. The more verdicts, the steadier the numbers.":
             "Kendi kararlarınla ölçülür: kısa listeye aldığın, başvurduğun ya da geçtiğin ilanlar ve burada karar verdiklerin. Karar sayısı arttıkça sayılar oturur.",
         "Missing":
@@ -861,6 +865,8 @@ nonisolated extension L10n {
             "Ollama açık modelleri kendi Mac'inde çalıştırır. Kur, bir model indir (örneğin Ollama uygulamasından), sonra listeyi buradan yükle. Büyük modeller ilanları daha iyi değerlendirir ama belleği bol bir Mac ister.",
         "On my own server":
             "Kendi sunucumda",
+        "On the %@ jobs that both of you judged: the same verdict on %@. Only the AI model said yes: %@. Only you said yes: %@.":
+            "İkinizin de karar verdiği %@ ilanda: %@ oranında aynı karar. Sadece yapay zeka modeli evet dedi: %@. Sadece sen evet dedin: %@.",
         "On the left the text in the document, on the right the profile facts it rests on. Where a line is marked \"rewritten\", check that the meaning stayed the same.":
             "Solda belgedeki metin, sağda dayandığı profil gerçekleri. \"yeniden yazıldı\" işaretli satırlarda anlamın değişmediğini kontrol et.",
         "On this Mac":
@@ -921,15 +927,15 @@ nonisolated extension L10n {
             "Ücret",
         "Phone":
             "Telefon",
+    ]
+
+    private static let turkish6: [String: String] = [
         "Pick a posting from the list to see its evaluation.":
             "Listeden bir ilan seçince değerlendirmesi burada görünür.",
         "Place":
             "Yer",
         "Posted %@":
             "Yayın: %@",
-    ]
-
-    private static let turkish6: [String: String] = [
         "Posting text":
             "İlan metni",
         "Preparing the engine…":
@@ -1028,8 +1034,6 @@ nonisolated extension L10n {
             "SMTP portu",
         "Salary expectation":
             "Maaş beklentisi",
-        "Same verdict on %@ of them. Only the AI model said yes: %@. Only you said yes: %@.":
-            "Bunların %@ kadarında aynı karar. Sadece yapay zeka modeli evet dedi: %@. Sadece sen evet dedin: %@.",
         "Sample data":
             "Örnek veriler",
         "Save":
@@ -1106,13 +1110,13 @@ nonisolated extension L10n {
             "Servis",
         "Service token client ID":
             "Servis anahtarı Client ID",
+    ]
+
+    private static let turkish7: [String: String] = [
         "Service token client secret":
             "Servis anahtarı Client Secret",
         "Setting up the JobRadar engine":
             "JobRadar motoru kuruluyor",
-    ]
-
-    private static let turkish7: [String: String] = [
         "Setting up the engine: %@ (step %@ of %@)":
             "Motor kuruluyor: %1$@ (adım %2$@ / %3$@)",
         "Setting up the search":
@@ -1265,6 +1269,8 @@ nonisolated extension L10n {
             "Motor henüz çalışmıyor.",
         "The engine stopped while starting.":
             "Motor açılırken kapandı.",
+        "The first rows are measured on the same jobs, so they can be compared.":
+            "İlk satırlar aynı ilanlar üzerinde ölçülür, bu yüzden birbirleriyle karşılaştırılabilir.",
         "The first start takes a few seconds.":
             "İlk açılış birkaç saniye sürer.",
         "The ideal role in a sentence or two (field, level, kind of employer)":
@@ -1287,15 +1293,15 @@ nonisolated extension L10n {
             "Model çalışıyor: %@ %@ saniyede yanıt verdi.",
         "The new tracks replace the ones you have now. Nothing is saved until you press Save.":
             "Yeni alanlar şimdikilerin yerini alır. Kaydet'e basana kadar hiçbir şey kaydedilmez.",
+    ]
+
+    private static let turkish8: [String: String] = [
         "The posting has no text.":
             "İlan metni yok.",
         "The posting may be closed":
             "İlan kapanmış olabilir",
         "The profile fact behind every bullet and paragraph":
             "Her madde ve paragrafın dayandığı profil gerçeği",
-    ]
-
-    private static let turkish8: [String: String] = [
         "The requirements that are most often missing or only partly met in %@ jobs scored %@ or higher (last %@ days). Hover over a skill to see examples.":
             "Puanı %2$@ ve üstü olan %1$@ ilanda (son %3$@ gün) en sık eksik ya da kısmen karşılanan şartlar. Örnekleri görmek için becerinin üstüne gel.",
         "The same address":
@@ -1374,6 +1380,8 @@ nonisolated extension L10n {
             "Trainee",
         "Try again":
             "Tekrar dene",
+        "Turn on smart matching in Settings to compare it with the keyword order here.":
+            "Akıllı eşleştirmeyi Ayarlar'dan açarsan burada anahtar kelime sıralamasıyla karşılaştırılır.",
         "Undo changes":
             "Değişiklikleri geri al",
         "Usage counts against your own Claude plan under Anthropic's terms.":
@@ -1406,10 +1414,6 @@ nonisolated extension L10n {
             "Yapay zeka modelini bekliyor",
         "Waiting for you (%@)":
             "Onayını bekleyenler (%@)",
-        "Wanted among the first %@":
-            "İlk %@ içinde istediklerin",
-        "Wanted among the first 10":
-            "İlk 10'da istediklerin",
         "Welcome":
             "Hoş geldin",
         "Welcome to JobRadar":
@@ -1438,8 +1442,8 @@ nonisolated extension L10n {
             "İlanlar nereden geliyor",
         "Where?":
             "Nerede?",
-        "Which order puts the jobs you want first? (measured on %@ jobs)":
-            "Hangi sıralama istediğin ilanları öne alıyor? (%@ ilan üzerinde ölçüldü)",
+        "Which order puts the jobs you want first?":
+            "Hangi sıralama istediğin ilanları öne alıyor?",
         "While the app is open, a copy of your database is kept every day (the last 14 days).":
             "Uygulama açıkken veritabanının bir kopyası her gün ayrıca saklanır (son 14 gün).",
         "Who you are professionally, in a line or two":
@@ -1472,13 +1476,13 @@ nonisolated extension L10n {
             "Sen",
         "You are all set":
             "Her şey hazır",
+    ]
+
+    private static let turkish9: [String: String] = [
         "You have unsaved changes.":
             "Kaydedilmemiş değişikliklerin var.",
         "You want":
             "İstediğin",
-    ]
-
-    private static let turkish9: [String: String] = [
         "Your answer":
             "Cevabın",
         "Your answer in %@":

@@ -912,29 +912,31 @@ TR.update({
         "Kendi kararlarınla ölçülür: kısa listeye aldığın, başvurduğun ya da geçtiğin ilanlar ve burada karar verdiklerin. Karar sayısı arttıkça sayılar oturur.",
     "%@ verdicts: %@ fit, %@ maybe, %@ do not fit": "%@ karar: %@ uygun, %@ belki, %@ uygun değil",
     "Judge jobs…": "İlanlara karar ver…",
+    "Keys 1, 2 and 3 choose Fits, Maybe and Does not fit.": "1, 2 ve 3 tuşları Uygun, Belki ve Uygun değil kararını verir.",
     "With fewer than %@ verdicts, or only a few of one kind, the numbers below still move a lot.":
         "%@ karardan azsa ya da bir türden çok az karar varsa aşağıdaki sayılar hâlâ çok oynar.",
-    "Which order puts the jobs you want first? (measured on %@ jobs)":
-        "Hangi sıralama istediğin ilanları öne alıyor? (%@ ilan üzerinde ölçüldü)",
-    "Wanted among the first 10": "İlk 10'da istediklerin",
-    "Wanted among the first %@": "İlk %@ içinde istediklerin",
-    "AUC: 0.5 is chance, 1.0 is perfect. The first rows are measured on the same jobs, so they can be compared.":
-        "AUC: 0,5 rastgele, 1,0 kusursuz demektir. İlk satırlar aynı ilanlar üzerinde ölçülür, bu yüzden birbirleriyle karşılaştırılabilir.",
-    "AUC: 0.5 is chance, 1.0 is perfect. Turn on smart matching in Settings to compare it with the keyword order here.":
-        "AUC: 0,5 rastgele, 1,0 kusursuz demektir. Akıllı eşleştirmeyi Ayarlar'dan açarsan burada anahtar kelime sıralamasıyla karşılaştırılır.",
+    "Which order puts the jobs you want first?": "Hangi sıralama istediğin ilanları öne alıyor?",
+    "First 10": "İlk 10",
+    "First %@": "İlk %@",
+    "Measured on the %@ jobs that have a verdict of yours. First 10 and first %@: the share of the jobs at the top of an order that you want. NDCG@10 and AUC: how well the whole order follows your verdicts; 1.0 is perfect, and an AUC of 0.5 is chance.":
+        "Karar verdiğin %@ ilan üzerinde ölçülür. İlk 10 ve ilk %@: bir sıralamanın en üstündeki ilanların ne kadarını istediğin. NDCG@10 ve AUC: sıralamanın tamamı kararlarına ne kadar uyuyor; 1.0 kusursuz, AUC için 0.5 rastgele demektir.",
+    "The first rows are measured on the same jobs, so they can be compared.":
+        "İlk satırlar aynı ilanlar üzerinde ölçülür, bu yüzden birbirleriyle karşılaştırılabilir.",
+    "Turn on smart matching in Settings to compare it with the keyword order here.":
+        "Akıllı eşleştirmeyi Ayarlar'dan açarsan burada anahtar kelime sıralamasıyla karşılaştırılır.",
     "What reaches the AI model, and what never does": "Yapay zeka modeline neler ulaşıyor, neler hiç ulaşmıyor",
-    "Judged by you": "Karar verdiğin",
+    "Judged": "Karar verilen",
     "You want": "İstediğin",
     "Estimate": "Tahmin",
     "About %@ jobs you would want never reach the AI model.":
         "İsteyeceğin yaklaşık %@ ilan yapay zeka modeline hiç ulaşmıyor.",
-    "Judge at least 5 jobs of a group to see what share of it you want.":
-        "Bir grubun ne kadarını istediğini görmek için o gruptan en az 5 ilana karar ver.",
-    "Does the AI model judge like you? (%@ jobs)": "Yapay zeka modeli senin gibi mi karar veriyor? (%@ ilan)",
-    "Same verdict on %@ of them. Only the AI model said yes: %@. Only you said yes: %@.":
-        "Bunların %@ kadarında aynı karar. Sadece yapay zeka modeli evet dedi: %@. Sadece sen evet dedin: %@.",
+    "Estimate: the share you wanted among the jobs you judged, applied to the whole group. It appears once you judged at least 5 jobs of a group.":
+        "Tahmin: karar verdiğin ilanlar içinde istediklerinin payı, grubun tamamına uygulanır. Bir gruptan en az 5 ilana karar verince görünür.",
+    "Does the AI model judge like you?": "Yapay zeka modeli senin gibi mi karar veriyor?",
+    "On the %@ jobs that both of you judged: the same verdict on %@. Only the AI model said yes: %@. Only you said yes: %@.":
+        "İkinizin de karar verdiği %@ ilanda: %@ oranında aynı karar. Sadece yapay zeka modeli evet dedi: %@. Sadece sen evet dedin: %@.",
     "Agreement beyond chance (kappa): %@. From 0.6 on it is good.":
-        "Şansın ötesinde uyum (kappa): %@. 0,6 ve üstü iyidir.",
+        "Şansın ötesinde uyum (kappa): %@. 0.6 ve üstü iyidir.",
     "%@ of the evaluated jobs were jobs you want.": "Değerlendirilen ilanların %@ kadarı istediğin ilanlardı.",
     "Use of the AI model in the last %@ days": "Son %@ günde yapay zeka modeli kullanımı",
     "Evaluated by the AI model": "Yapay zeka modeli değerlendirdi",

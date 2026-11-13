@@ -83,22 +83,7 @@ struct MatchingSettings: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Section(t("State")) {
-                    packageState(state)
-                    LabeledContent(t("Jobs with a semantic score")) { Text(verbatim: "\(state.scored)") }
-                    LabeledContent(t("Let through by smart matching")) { Text(verbatim: "\(state.promoted)") }
-                    if !state.lastRun.isEmpty {
-                        LabeledContent(t("Last run")) { Text(Dates.relative(state.lastRun)) }
-                    }
-                    if let waiting = state.lastWaiting, waiting > 0 {
-                        Text(t("%@ jobs are compared in the next scan.", waiting))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    if !state.lastError.isEmpty {
-                        Banner(kind: .warning, text: state.lastError)
-                    }
-                }
+                // the buttons and what they report come before the numbers, so they stay on screen without scrolling
                 Section {
                     HStack(spacing: 10) {
                         Button(t("Save")) { Task { await save() } }
@@ -114,6 +99,22 @@ struct MatchingSettings: View {
                         Text(busyText).font(.caption).foregroundStyle(.secondary)
                     }
                     if !message.isEmpty { Banner(kind: messageOK ? .success : .warning, text: message) }
+                }
+                Section(t("State")) {
+                    packageState(state)
+                    LabeledContent(t("Jobs with a semantic score")) { Text(verbatim: "\(state.scored)") }
+                    LabeledContent(t("Let through by smart matching")) { Text(verbatim: "\(state.promoted)") }
+                    if !state.lastRun.isEmpty {
+                        LabeledContent(t("Last run")) { Text(Dates.relative(state.lastRun)) }
+                    }
+                    if let waiting = state.lastWaiting, waiting > 0 {
+                        Text(t("%@ jobs are compared in the next scan.", waiting))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if !state.lastError.isEmpty {
+                        Banner(kind: .warning, text: state.lastError)
+                    }
                 }
             }
             if !error.isEmpty {
@@ -322,42 +323,59 @@ struct MatchingSettings: View {
 // MARK: Measurements
 
 /// What the user's own verdicts say about the rankings, the keyword rules and the AI model.
-struct MeasurementSection: View {
+/// It fills the wide column beside the status page, where the tables have room.
+struct MeasurementPane: View {
     @Environment(AppModel.self) private var model
     let report: BenchReport
     @State private var showLabeling = false
 
     var body: some View {
-        SectionBox(title: t("How well JobRadar finds your jobs"), systemImage: "ruler", tint: .teal) {
-            Text(t("Measured on your own verdicts: the jobs you shortlisted, applied to or skipped, and the ones you judged here. The more verdicts, the steadier the numbers."))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            HStack(spacing: 10) {
-                Text(t("%@ verdicts: %@ fit, %@ maybe, %@ do not fit", report.labels.total, report.labels.good,
-                       report.labels.maybe, report.labels.bad))
-                Spacer()
-                Button {
-                    showLabeling = true
-                } label: {
-                    Label(t("Judge jobs…"), systemImage: "hand.thumbsup")
-                }
-                .buttonStyle(.glass).plainGlass()
-                .disabled(model.sampleData)
-            }
-            if !report.labels.enough {
-                Text(t("With fewer than %@ verdicts, or only a few of one kind, the numbers below still move a lot.", report.labels.needed))
+        CardPage(maxWidth: 760) {
+            SectionBox(title: t("How well JobRadar finds your jobs"), systemImage: "ruler", tint: .teal) {
+                Text(t("Measured on your own verdicts: the jobs you shortlisted, applied to or skipped, and the ones you judged here. The more verdicts, the steadier the numbers."))
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .center, spacing: 10) {
+                    Text(t("%@ verdicts: %@ fit, %@ maybe, %@ do not fit", report.labels.total, report.labels.good,
+                           report.labels.maybe, report.labels.bad))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
+                    Button {
+                        showLabeling = true
+                    } label: {
+                        Label(t("Judge jobs…"), systemImage: "hand.thumbsup")
+                    }
+                    .buttonStyle(.glass).plainGlass()
+                    .fixedSize()
+                    .disabled(model.sampleData)
+                }
+                if !report.labels.enough {
+                    Text(t("With fewer than %@ verdicts, or only a few of one kind, the numbers below still move a lot.", report.labels.needed))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             if !report.rankings.rows.isEmpty {
-                rankings
+                SectionBox(title: t("Which order puts the jobs you want first?"), systemImage: "list.number", tint: .indigo) {
+                    rankings
+                }
             }
-            gate
+            SectionBox(title: t("What reaches the AI model, and what never does"),
+                       systemImage: "line.3.horizontal.decrease.circle", tint: .orange) {
+                gate
+            }
             if report.judge.n > 0 {
-                judge
+                SectionBox(title: t("Does the AI model judge like you?"), systemImage: "checkmark.seal", tint: .green) {
+                    judge
+                }
             }
             if report.usage.calls > 0 {
-                usage
+                SectionBox(title: t("Use of the AI model in the last %@ days", report.usage.days),
+                           systemImage: "speedometer", tint: .gray) {
+                    usage
+                }
             }
         }
         .sheet(isPresented: $showLabeling) {
@@ -368,60 +386,72 @@ struct MeasurementSection: View {
         }
     }
 
+    /// A number or short heading of a table: never broken in the middle.
+    private func cell(_ text: String) -> some View {
+        Text(verbatim: text).fixedSize()
+    }
+
+    /// The first column of a table: takes the room that is left and wraps at word ends.
+    private func name(_ text: String) -> some View {
+        Text(verbatim: text)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private var rankings: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(t("Which order puts the jobs you want first? (measured on %@ jobs)", report.rankings.n))
-                .font(.callout.weight(.semibold))
-            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
+        let budget = report.rankings.rows.first?.budget ?? 20
+        return VStack(alignment: .leading, spacing: 8) {
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 7) {
                 GridRow {
-                    Text(t("Order")).bold()
-                    Text(t("Wanted among the first 10")).bold()
-                    Text(t("Wanted among the first %@", report.rankings.rows.first?.budget ?? 20)).bold()
-                    Text(verbatim: "NDCG@10").bold()
-                    Text(verbatim: "AUC").bold()
+                    name(t("Order")).bold()
+                    cell(t("First 10")).bold()
+                    cell(t("First %@", budget)).bold()
+                    cell("NDCG@10").bold()
+                    cell("AUC").bold()
                 }
                 .font(.caption)
                 Divider()
                 ForEach(report.rankings.rows) { row in
                     GridRow {
-                        Text(row.id == "llm" ? t("%@ (%@ jobs)", row.name, row.n) : row.name)
-                        Text(Self.percent(row.precisionAt10))
-                        Text(Self.percent(row.budgetHitRate))
-                        Text(Self.number(row.ndcgAt10))
-                        Text(Self.number(row.auc))
+                        name(row.id == "llm" && row.n != report.rankings.n ? t("%@ (%@ jobs)", row.name, row.n) : row.name)
+                        cell(Self.percent(row.precisionAt10))
+                        cell(Self.percent(row.budgetHitRate))
+                        cell(Self.number(row.ndcgAt10))
+                        cell(Self.number(row.auc))
                     }
                     .font(.callout.monospacedDigit())
                 }
             }
-            Text(report.rankings.semantic
-                 ? t("AUC: 0.5 is chance, 1.0 is perfect. The first rows are measured on the same jobs, so they can be compared.")
-                 : t("AUC: 0.5 is chance, 1.0 is perfect. Turn on smart matching in Settings to compare it with the keyword order here."))
+            Text(t("Measured on the %@ jobs that have a verdict of yours. First 10 and first %@: the share of the jobs at the top of an order that you want. NDCG@10 and AUC: how well the whole order follows your verdicts; 1.0 is perfect, and an AUC of 0.5 is chance.", report.rankings.n, budget)
+                 + " "
+                 + (report.rankings.semantic
+                    ? t("The first rows are measured on the same jobs, so they can be compared.")
+                    : t("Turn on smart matching in Settings to compare it with the keyword order here.")))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var gate: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(t("What reaches the AI model, and what never does"))
-                .font(.callout.weight(.semibold))
-            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 7) {
                 GridRow {
-                    Text(t("Group")).bold()
-                    Text(t("Jobs")).bold()
-                    Text(t("Judged by you")).bold()
-                    Text(t("You want")).bold()
-                    Text(t("Estimate")).bold()
+                    name(t("Group")).bold()
+                    cell(t("Jobs")).bold()
+                    cell(t("Judged")).bold()
+                    cell(t("You want")).bold()
+                    cell(t("Estimate")).bold()
                 }
                 .font(.caption)
                 Divider()
                 ForEach(report.gate.groups) { group in
                     GridRow {
-                        Text(Self.groupTitle(group.id))
-                        Text(verbatim: "\(group.postings)")
-                        Text(verbatim: "\(group.judged)")
-                        Text(verbatim: Self.wantedText(group))
-                        Text(verbatim: Self.estimateText(group))
+                        name(Self.groupTitle(group.id))
+                        cell("\(group.postings)")
+                        cell("\(group.judged)")
+                        cell(Self.wantedText(group))
+                        cell(Self.estimateText(group))
                     }
                     .font(.callout.monospacedDigit())
                 }
@@ -430,44 +460,46 @@ struct MeasurementSection: View {
                 Text(t("About %@ jobs you would want never reach the AI model.", Self.count(missed)))
                     .font(.callout)
                     .foregroundStyle(missed >= 1 ? Color.orange : Color.green)
-            } else {
-                Text(t("Judge at least 5 jobs of a group to see what share of it you want."))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            Text(t("Estimate: the share you wanted among the jobs you judged, applied to the whole group. It appears once you judged at least 5 jobs of a group."))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var judge: some View {
         let j = report.judge
-        return VStack(alignment: .leading, spacing: 4) {
-            Text(t("Does the AI model judge like you? (%@ jobs)", j.n))
-                .font(.callout.weight(.semibold))
-            Text(t("Same verdict on %@ of them. Only the AI model said yes: %@. Only you said yes: %@.",
-                   Self.percent(j.agreement), j.onlyAiYes, j.onlyYouYes))
+        return VStack(alignment: .leading, spacing: 5) {
+            Text(t("On the %@ jobs that both of you judged: the same verdict on %@. Only the AI model said yes: %@. Only you said yes: %@.",
+                   j.n, Self.percent(j.agreement), j.onlyAiYes, j.onlyYouYes))
                 .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
             if let kappa = j.kappa {
                 Text(t("Agreement beyond chance (kappa): %@. From 0.6 on it is good.", Self.number(kappa)))
                     .font(.callout)
                     .foregroundStyle(kappa >= 0.6 ? Color.green : Color.orange)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Text(t("%@ of the evaluated jobs were jobs you want.", Self.percent(j.hitRate)))
                 .font(.callout)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var usage: some View {
         let u = report.usage
         return VStack(alignment: .leading, spacing: 4) {
-            Text(t("Use of the AI model in the last %@ days", u.days))
-                .font(.callout.weight(.semibold))
             Text(Self.usageLine(u))
                 .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
             ForEach(u.byPurpose) { row in
                 Text(Self.purposeLine(row))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -587,6 +619,11 @@ struct LabelingSheet: View {
                 Banner(kind: .error, text: error)
             }
             HStack {
+                if !queue.isEmpty {
+                    Text(t("Keys 1, 2 and 3 choose Fits, Maybe and Does not fit."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Spacer()
                 Button(t("Done")) { dismiss() }
                     .keyboardShortcut(.cancelAction)
@@ -626,7 +663,9 @@ struct LabelingSheet: View {
         if let posted = job.postedAt, !posted.isEmpty {
             items.append((t("Posted %@", Dates.short(posted)), .secondary))
         }
-        return items
+        // the same word can come from two places (the kind of job and a note of the posting): show it once
+        var seen = Set<String>()
+        return items.filter { seen.insert($0.text).inserted }
     }
 
     private func buttons(_ job: LabelCandidate) -> some View {

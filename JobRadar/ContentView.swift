@@ -107,8 +107,12 @@ struct MainView: View {
         } else {
             switch model.sidebar {
             case .stats:
-                ContentUnavailableView(t("Engine status"), systemImage: "chart.bar.xaxis",
-                                       description: Text(t("Sources, runs and skill gaps are summarised on the left.")))
+                if let report = model.bench {
+                    MeasurementPane(report: report)
+                } else {
+                    ContentUnavailableView(t("Engine status"), systemImage: "chart.bar.xaxis",
+                                           description: Text(t("Sources, runs and skill gaps are summarised on the left.")))
+                }
             case .profile:
                 ProfilePaperView()
             case .search:
