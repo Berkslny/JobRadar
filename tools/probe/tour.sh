@@ -148,6 +148,14 @@ status_page() {
   page_shots "$LANG_NOW-status$1"
   ax texts > "$OUT/texts-$LANG_NOW-status$1.txt"
   wc -l < "$OUT/texts-$LANG_NOW-status$1.txt"
+  # the same page in a roomy window
+  ax resize 1500 940
+  sleep 2
+  ax scroll 0 >/dev/null; sleep 1; shot "$LANG_NOW-status$1-wide-0"
+  ax scroll 1 >/dev/null; sleep 1; shot "$LANG_NOW-status$1-wide-1"
+  ax resize 1080 732
+  sleep 2
+  ax scroll 0 >/dev/null
 }
 
 judging_sheet() {  # judging_sheet full|look

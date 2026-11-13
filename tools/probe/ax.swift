@@ -10,6 +10,7 @@
 //   ax show ROLE LABEL              scrolls the element into view
 //   ax scroll FRACTION [WINDOW]     vertical scroll bars of a window (0 to 1)
 //   ax clickat X Y                  a real mouse click at screen coordinates
+//   ax resize W H [WINDOW]          moves a window to the top left and gives it this size
 // ROLE is an accessibility role (AXButton, AXCheckBox, AXStaticText, AXPopUpButton, AXMenuItem …) or "*".
 
 import AppKit
@@ -109,6 +110,23 @@ func find(_ wantedRole: String, _ label: String) -> AXUIElement? {
             if matches(e, wantedRole, label) {
                 found = e
                 return false
+            }
+            return true
+        }
+        if found != nil { break }
+    }
+    if found != nil { return found }
+    // a control named by the text right before it (switches and pop-up buttons in a form)
+    for window in windows() {
+        var budget = 20000
+        walk(window, budget: &budget) { e, _ in
+            let children = kids(e)
+            for (i, child) in children.enumerated() where i + 1 < children.count {
+                if role(child) == "AXStaticText" && text(child, "AXValue") == label
+                    && (wantedRole == "*" || role(children[i + 1]) == wantedRole) {
+                    found = children[i + 1]
+                    return false
+                }
             }
             return true
         }
@@ -273,6 +291,22 @@ case "scroll":
         break
     }
     print("scrolled \(count) bars")
+
+case "resize":
+    guard args.count > 2, let w = Double(args[1]), let h = Double(args[2]) else { fail("resize W H [WINDOW]") }
+    let wantedTitle = args.count > 3 ? args[3] : ""
+    for win in windows() where wantedTitle.isEmpty || text(win, "AXTitle").contains(wantedTitle) {
+        var origin = CGPoint(x: 80, y: 60)
+        if let p = AXValueCreate(.cgPoint, &origin) {
+            AXUIElementSetAttributeValue(win, "AXPosition" as CFString, p)
+        }
+        var size = CGSize(width: w, height: h)
+        if let v = AXValueCreate(.cgSize, &size) {
+            let result = AXUIElementSetAttributeValue(win, "AXSize" as CFString, v)
+            print(result == .success ? "resized to \(Int(w))x\(Int(h))" : "resize failed: \(result.rawValue)")
+        }
+        break
+    }
 
 default:
     fail("unknown command \(command)")
