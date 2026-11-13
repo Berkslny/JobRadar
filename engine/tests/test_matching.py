@@ -340,6 +340,25 @@ def test_without_enough_postings_on_either_side_there_is_no_bar(cfg, profile):
     assert more.threshold is not None and (more.reference, more.background, more.promoted) == (22, 13, 1)
 
 
+def test_evaluated_postings_are_the_yardstick_right_after_matching_is_turned_on(cfg, profile, monkeypatch):
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job()])
+    # an installation that has been in use: everything the keyword rules accepted is evaluated already
+    conn.execute("UPDATE jobs SET llm_score = 3.0 WHERE status = 'new'")
+    conn.commit()
+    fake = WordEmbedder()
+    cfg.matching.promote = False
+    assert match.run_matching(conn, cfg, profile, fake, log=lambda m: None).embedded == 0    # nothing waits
+    cfg.matching.promote = True
+    # only a few of them are looked at: too few for a bar
+    monkeypatch.setattr(match, "REFERENCE_SAMPLE", 5)
+    few = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    assert (few.embedded, few.reference, few.background, few.threshold) == (18, 5, 13, None)
+    monkeypatch.setattr(match, "REFERENCE_SAMPLE", 300)
+    report = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    assert (report.embedded, report.reference, report.background, report.promoted) == (17, 22, 13, 1)
+    assert by_title(conn, "Ingenieur programmierbare")["status"] == "new"
+
+
 def test_when_both_sides_score_alike_nothing_is_promoted(cfg, profile):
     conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job()])
     cfg.matching.promote_max_per_run = 0
@@ -559,6 +578,8 @@ def test_matching_settings_test_and_run_through_the_api(cfg, profile, monkeypatc
     assert done["status"] == "done" and done["result"]["embedded"] == 35 and done["result"]["promoted"] == 1
     after = client.get("/api/v1/matching").json()
     assert after["scored"] == 35 and after["promoted"] == 1 and after["last_run"] and after["threshold"] > 0
+    assert (after["last_reference"], after["last_background"]) == (22, 13)
+    assert (after["reference_needed"], after["background_needed"]) == (match.MIN_REFERENCE, match.MIN_BACKGROUND)
     hidden = by_title(conn, "Ingenieur programmierbare")
     detail = client.get(f"/api/v1/jobs/{hidden['id']}", headers={"X-JobRadar-Lang": "en"}).json()
     assert detail["match"]["promoted"] is True and detail["match"]["track"] == "fpga"

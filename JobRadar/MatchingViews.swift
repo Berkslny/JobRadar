@@ -112,6 +112,11 @@ struct MatchingSettings: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    if let hint = Self.barHint(state) {
+                        Text(hint)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     if !state.lastError.isEmpty {
                         Banner(kind: .warning, text: state.lastError)
                     }
@@ -144,6 +149,19 @@ struct MatchingSettings: View {
                    ? t("The engine does not have the matching package yet.")
                    : t("The server has no matching package installed (pip install 'jobradar[match]')."))
         }
+    }
+
+    /// Why nothing can be let through yet; nil when a bar exists or promotion is off.
+    static func barHint(_ state: MatchingState) -> String? {
+        guard state.enabled, state.promote, !state.lastRun.isEmpty, state.threshold == nil,
+              let reference = state.lastReference, let background = state.lastBackground else { return nil }
+        let referenceNeeded = state.referenceNeeded ?? 20
+        let backgroundNeeded = state.backgroundNeeded ?? 10
+        if reference < referenceNeeded || background < backgroundNeeded {
+            return t("No job can be let through yet: JobRadar first needs more jobs to measure against. With a semantic score so far: %@ jobs that match your keywords (%@ needed) and %@ that do not (%@ needed).",
+                     reference, referenceNeeded, background, backgroundNeeded)
+        }
+        return t("No job is let through: by meaning, the jobs your keywords turn away look like the ones they accept.")
     }
 
     private static func title(_ option: MatchingModelOption) -> String {
