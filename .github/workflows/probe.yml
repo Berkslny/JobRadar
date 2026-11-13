@@ -16,13 +16,13 @@ jobs:
   probe:
     name: Probe the Mac runner
     runs-on: xcode-27
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v5
-      - name: Run the probe
-        run: bash tools/probe/probe.sh
+      - name: Run the tour
+        run: bash tools/probe/tour.sh
       - name: Publish what the probe wrote
         if: always()
         run: bash tools/probe/publish.sh
