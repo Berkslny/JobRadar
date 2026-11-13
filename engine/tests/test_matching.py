@@ -37,6 +37,12 @@ OFF = ("Your tasks\n- You prepare the monthly accounts and the annual report\n- 
        + "We are a friendly company with a long history. " * 5)
 
 
+# no keyword and nothing in common with any track: what the keyword rules turn away in every scan
+OFFICE = ("Deine Aufgaben\n- Du begrüßt Gäste am Empfang und nimmst Anrufe entgegen\n- Du buchst Besprechungsräume und "
+          "bestellst das Mittagessen\nDas bringst du mit\n- Freundliches Auftreten und Freude am Telefonieren\n"
+          "- Du hältst das Büro ordentlich und kümmerst dich um die Post\n" + "Unser Haus liegt mitten in der Altstadt. " * 6)
+
+
 class WordEmbedder:
     """Stand-in for an embedding model: texts that share words get similar vectors. Records what it is asked."""
 
@@ -71,6 +77,11 @@ def fpga_jobs(n=22):
 def hidden_job(i=1, description=HIDDEN, **extra):
     return RawJob(source="indeed", title=f"Ingenieur programmierbare Logik {i}", company=f"Himmel {i} AG",
                   location="Bremen", url=f"https://de.indeed.com/viewjob?jk=h{i}", description=description, **extra)
+
+
+def office_jobs(n=12):
+    return [RawJob(source="indeed", title=f"Empfangskraft {i}", company=f"Büro {i} KG", location="Bremen",
+                   url=f"https://de.indeed.com/viewjob?jk=e{i}", description=OFFICE) for i in range(n)]
 
 
 def seed(cfg, profile, raws):
@@ -124,8 +135,6 @@ def test_fuse_combines_keyword_and_semantic_rank():
     # a part of the list has no semantic score: those keep their keyword rank and are not pushed to the end
     mixed = [i for i, _ in match.fuse([("a", 90, None), ("b", 80, 0.1), ("c", 70, 0.9), ("d", 10, None)])]
     assert mixed.index("a") < mixed.index("d") and mixed.index("c") < mixed.index("b")
-    assert match.percentile([0.1, 0.2, 0.3, 0.4], 50) == pytest.approx(0.25)
-    assert match.percentile([0.7], 90) == 0.7
 
 
 def test_vectors_are_stored_as_float32_of_length_one():
@@ -251,21 +260,27 @@ def test_builtin_backend_against_the_installed_library(tmp_path):
 
 
 def test_matching_scores_promotes_and_does_nothing_twice(cfg, profile):
-    conn = seed(cfg, profile, fpga_jobs() + [hidden_job(), RawJob(
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job(), RawJob(
         source="indeed", title="Bilanzbuchhalter", company="Zahl AG", location="Bremen",
         url="https://de.indeed.com/viewjob?jk=o1", description=OFF)])
     hidden = by_title(conn, "Ingenieur programmierbare")
     assert hidden["status"] == "filtered" and hidden["filtered_reason"] == "hiçbir hedef alana uymuyor"
     fake = WordEmbedder()
     report = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
-    # 22 keyword matches and the posting only the track rule had filtered; the bookkeeper breaks a rule of
-    # your own (title word) and is not even looked at
-    assert (report.embedded, report.scored, report.waiting) == (23, 23, 0)
-    assert report.reference == 22 and report.threshold is not None and report.promoted == 1
-    assert conn.execute("SELECT COUNT(*) FROM embeddings WHERE kind = 'job'").fetchone()[0] == 23
+    # 22 keyword matches, and 13 postings only the track rule had filtered (12 at a reception desk and the
+    # hidden one); the bookkeeper breaks a rule of your own (title word) and is not even looked at
+    assert (report.embedded, report.scored, report.waiting) == (35, 35, 0)
+    assert (report.reference, report.background, report.promoted) == (22, 13, 1)
+    assert conn.execute("SELECT COUNT(*) FROM embeddings WHERE kind = 'job'").fetchone()[0] == 35
     assert match_row(conn, by_title(conn, "Bilanzbuchhalter")["id"]) is None
     hidden = by_title(conn, "Ingenieur programmierbare")
     row = match_row(conn, hidden["id"])
+    # the bar lies half way between what the keyword rules accept and what they turn away
+    accepted = match_row(conn, by_title(conn, "FPGA-Entwickler 3")["id"])["semantic"]
+    desk = match_row(conn, by_title(conn, "Empfangskraft 3")["id"])
+    assert report.threshold == pytest.approx((accepted + desk["semantic"]) / 2, abs=1e-3)
+    assert desk["semantic"] < report.threshold < row["semantic"] and desk["promoted"] == 0
+    assert by_title(conn, "Empfangskraft 3")["status"] == "filtered"
     assert hidden["status"] == "new" and hidden["filtered_reason"] is None and hidden["track"] == "fpga"
     assert hidden["flags"]["semantic"] == {"promoted": True, "track": "fpga", "sim": round(row["semantic"], 3)}
     assert row["promoted"] == 1 and row["best_track"] == "fpga" and row["semantic"] >= report.threshold
@@ -283,21 +298,23 @@ def test_matching_scores_promotes_and_does_nothing_twice(cfg, profile):
     asked = len(fake.calls)
     again = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
     assert (again.embedded, again.scored, again.promoted, again.demoted) == (0, 0, 0, 0) and len(fake.calls) == asked
-    assert match.status(conn, cfg)["scored"] == 23 and match.status(conn, cfg)["promoted"] == 1
+    assert match.status(conn, cfg)["scored"] == 35 and match.status(conn, cfg)["promoted"] == 1
+    # the promoted posting still counts among those the keyword rules turn away: the bar has not moved
+    assert again.threshold == report.threshold and (again.reference, again.background) == (22, 13)
     view = match.job_view(conn, cfg, hidden["id"])
     assert view["promoted"] is True and view["track_name"] == "FPGA / Embedded hardware"
 
 
 def test_promotion_respects_your_own_rules_and_the_limit(cfg, profile):
     cfg.matching.promote_max_per_run = 2
-    conn = seed(cfg, profile, fpga_jobs() + [hidden_job(1), hidden_job(2), hidden_job(3), hidden_job(4)])
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job(1), hidden_job(2), hidden_job(3), hidden_job(4)])
     # the fourth company lands on the blocklist after the scan: its posting is still stored as "track only"
     cfg.filters.company_blacklist = ["Himmel 4"]
     fake = WordEmbedder()
     first = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
     assert first.promoted == 2
     second = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
-    assert second.promoted == 1 and second.embedded == 0
+    assert second.promoted == 1 and second.embedded == 0 and second.threshold == first.threshold
     third = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
     assert third.promoted == 0
     blocked = by_title(conn, "Ingenieur programmierbare Logik 4")
@@ -310,18 +327,87 @@ def test_promotion_respects_your_own_rules_and_the_limit(cfg, profile):
     assert match.run_matching(conn2, cfg, profile, fake, log=lambda m: None).promoted == 0
 
 
+def test_without_enough_postings_on_either_side_there_is_no_bar(cfg, profile):
+    # keyword matches, but hardly anything the keyword rules turn away: nothing to measure the bar on
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs(3) + [hidden_job()])
+    fake = WordEmbedder()
+    few = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    assert (few.threshold, few.reference, few.background, few.promoted) == (None, 22, 4, 0)
+    assert by_title(conn, "Ingenieur programmierbare")["status"] == "filtered"
+    # more of them arrive with the next scan: now the bar exists
+    import_raws(conn, cfg, profile, office_jobs(12)[3:])
+    more = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    assert more.threshold is not None and (more.reference, more.background, more.promoted) == (22, 13, 1)
+
+
+def test_when_both_sides_score_alike_nothing_is_promoted(cfg, profile):
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job()])
+    cfg.matching.promote_max_per_run = 0
+    match.run_matching(conn, cfg, profile, WordEmbedder(), log=lambda m: None)      # scores, no promotion
+    cfg.matching.promote_max_per_run = 5
+    model, qhash = match.current_keys(cfg, profile)
+    bar, accepted, away = match.promotion_bar(conn, cfg, model, qhash)
+    assert bar is not None and (accepted, away) == (22, 13)
+    filtered = "job_id IN (SELECT id FROM jobs WHERE status = 'filtered')"
+    # what the keyword rules turn away scores like what they accept: meaning cannot tell the two apart
+    conn.execute("UPDATE job_match SET semantic = 0.3")
+    assert match.promotion_bar(conn, cfg, model, qhash) == (None, 22, 13)
+    # … or even higher
+    conn.execute(f"UPDATE job_match SET semantic = 0.6 WHERE {filtered}")
+    assert match.promotion_bar(conn, cfg, model, qhash) == (None, 22, 13)
+    assert match.run_matching(conn, cfg, profile, WordEmbedder(), log=lambda m: None).promoted == 0
+    # promote_bar says where between the two typical scores the bar lies
+    conn.execute(f"UPDATE job_match SET semantic = 0.2 WHERE {filtered}")
+    assert match.promotion_bar(conn, cfg, model, qhash)[0] == pytest.approx(0.25)
+    cfg.matching.promote_bar = 0.2
+    assert match.promotion_bar(conn, cfg, model, qhash)[0] == pytest.approx(0.22)
+    cfg.matching.promote_bar = 1.0
+    assert match.promotion_bar(conn, cfg, model, qhash)[0] == pytest.approx(0.3)
+
+
+def test_a_posting_scored_down_by_a_requirement_is_not_promoted(cfg, profile):
+    # close to the track in meaning, and only the track rule filtered it, but it asks for ten years of
+    # experience: its quick score is low for a reason the embedding model knows nothing about
+    demanding = hidden_job(7, description=HIDDEN + "\nMindestens 10 Jahre Berufserfahrung erforderlich.")
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job(1), demanding])
+    job = by_title(conn, "Ingenieur programmierbare Logik 7")
+    assert job["status"] == "filtered" and job["flags"]["years_required"] == 10
+    assert match._penalty(job["prescore_detail"]) <= match.HEAVY_PENALTY
+    assert match._penalty(json.dumps(job["prescore_detail"])) == match._penalty(job["prescore_detail"])
+    assert match._penalty(None) == 0 and match._penalty("{broken") == 0 and match._penalty('{"penalties": [["x"]]}') == 0
+    fake = WordEmbedder()
+    report = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    # it has a score (the measurements use it), but it is neither a candidate nor part of the yardstick
+    assert match_row(conn, job["id"])["semantic"] > report.threshold
+    assert (report.promoted, report.background) == (1, 13)
+    assert by_title(conn, "Ingenieur programmierbare Logik 7")["status"] == "filtered"
+    promoted = by_title(conn, "Ingenieur programmierbare Logik 1")
+    assert promoted["status"] == "new"
+    # the full text of the promoted posting arrives later and asks for the same: the promotion is taken back
+    from jobradar.pipeline import Processor
+
+    promoted["description"] = demanding.description
+    Processor(cfg, profile).refresh(promoted)
+    assert promoted["status"] == "new"                       # still carried by its promotion
+    db.update_job(conn, promoted)
+    conn.commit()
+    later = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    assert (later.embedded, later.demoted, later.promoted) == (1, 1, 0)
+    assert by_title(conn, "Ingenieur programmierbare Logik 1")["status"] == "filtered"
+
+
 def test_a_changed_posting_is_embedded_again_and_can_lose_its_promotion(cfg, profile):
-    conn = seed(cfg, profile, fpga_jobs() + [hidden_job()])
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job()])
     fake = WordEmbedder()
     assert match.run_matching(conn, cfg, profile, fake, log=lambda m: None).promoted == 1
     hidden = by_title(conn, "Ingenieur programmierbare")
     # the full description arrives later and shows another job
-    db.update_fields(conn, hidden["id"], description=OFF, title="Sachbearbeiter Zahlen")
+    db.update_fields(conn, hidden["id"], description=OFFICE, title="Empfangskraft Zentrale")
     conn.commit()
     before = fake.documents()
     report = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
     assert (report.embedded, report.scored, report.demoted, report.promoted) == (1, 1, 1, 0)
-    assert fake.documents() - before == len(match.job_chunks("Sachbearbeiter Zahlen", OFF))
+    assert fake.documents() - before == len(match.job_chunks("Empfangskraft Zentrale", OFFICE))
     job = db.get_job(conn, hidden["id"])
     assert job["status"] == "filtered" and "semantic" not in job["flags"]
     assert match_row(conn, job["id"])["promoted"] == 0
@@ -329,12 +415,12 @@ def test_a_changed_posting_is_embedded_again_and_can_lose_its_promotion(cfg, pro
 
 
 def test_a_promoted_posting_you_have_handled_keeps_its_place(cfg, profile):
-    conn = seed(cfg, profile, fpga_jobs() + [hidden_job()])
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job()])
     fake = WordEmbedder()
-    match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
+    assert match.run_matching(conn, cfg, profile, fake, log=lambda m: None).promoted == 1
     hidden = by_title(conn, "Ingenieur programmierbare")
     db.set_status(conn, hidden["id"], "shortlisted")
-    db.update_fields(conn, hidden["id"], description=OFF)
+    db.update_fields(conn, hidden["id"], description=OFFICE)
     conn.commit()
     report = match.run_matching(conn, cfg, profile, fake, log=lambda m: None)
     assert report.demoted == 0 and db.get_job(conn, hidden["id"])["status"] == "shortlisted"
@@ -447,7 +533,7 @@ def wait(client, task):
 
 
 def test_matching_settings_test_and_run_through_the_api(cfg, profile, monkeypatch):
-    conn = seed(cfg, profile, fpga_jobs() + [hidden_job()])
+    conn = seed(cfg, profile, fpga_jobs() + office_jobs() + [hidden_job()])
     cfg.matching.enabled = False
     fake = WordEmbedder()
     monkeypatch.setattr(match, "get_embedder", lambda c: fake)
@@ -470,9 +556,9 @@ def test_matching_settings_test_and_run_through_the_api(cfg, profile, monkeypatc
     assert tested["status"] == "done" and tested["result"]["dim"] == 96
     assert tested["result"]["message"] == "The matching model works."
     done = wait(client, client.post("/api/v1/matching/run").json())
-    assert done["status"] == "done" and done["result"]["embedded"] == 23 and done["result"]["promoted"] == 1
+    assert done["status"] == "done" and done["result"]["embedded"] == 35 and done["result"]["promoted"] == 1
     after = client.get("/api/v1/matching").json()
-    assert after["scored"] == 23 and after["promoted"] == 1 and after["last_run"] and after["threshold"] > 0
+    assert after["scored"] == 35 and after["promoted"] == 1 and after["last_run"] and after["threshold"] > 0
     hidden = by_title(conn, "Ingenieur programmierbare")
     detail = client.get(f"/api/v1/jobs/{hidden['id']}", headers={"X-JobRadar-Lang": "en"}).json()
     assert detail["match"]["promoted"] is True and detail["match"]["track"] == "fpga"
@@ -508,7 +594,7 @@ def test_a_scan_matches_before_it_evaluates_and_survives_a_missing_model(cfg, pr
 
     cfg.matching.enabled = True
     cfg.scoring.llm_max_per_run = 30
-    raws = fpga_jobs() + [hidden_job()]
+    raws = fpga_jobs() + office_jobs() + [hidden_job()]
     monkeypatch.setattr("jobradar.pipeline.build_sources", lambda c, only=None: [StaticSource(raws)])
     llm = FakeLLM()
     monkeypatch.setattr("jobradar.scoring.llm.get_llm", lambda c: llm)

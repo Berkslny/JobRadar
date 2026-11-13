@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "jobradar"
-version = "1.0.0"
+version = "1.1.0"
 description = "Local-first job search assistant: multi-source discovery, evidence-based scoring with your own AI model, truthful CV tailoring and human-approved applications."
 readme = "README.md"
 requires-python = ">=3.10"

@@ -90,7 +90,8 @@ matching:
   base_url: ""                # ollama / openai: "" = the address under llm
   promote: true               # let a strong semantic match pass the keyword rules
   promote_max_per_run: 5      # at most this many per scan
-  promote_percentile: 50      # needed: a semantic score above this share of the keyword matches
+  promote_bar: 0.5            # the score needed: between the typical posting your keyword rules turn
+                              # away (0) and the typical one they accept (1); lower lets more through
   max_seconds_per_run: 180    # time a scan may spend on embedding (a quick scan: a third of it);
                               # the rest waits for the next scan
 

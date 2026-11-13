@@ -26,11 +26,25 @@ struct StatsView: View {
                         row(t("Profile"), s.todoFacts > 0 ? t("%@, %@ TODO notes", s.profileName, s.todoFacts) : s.profileName)
                         row(t("Version"), s.version)
                     }
-                    // in a narrow column the buttons first give up their symbols, then their words
-                    ViewThatFits(in: .horizontal) {
-                        engineButtons(s).labelStyle(.titleAndIcon)
-                        engineButtons(s).labelStyle(.titleOnly)
-                        engineButtons(s).labelStyle(.iconOnly)
+                    // in a narrow column the buttons take a second row instead of cutting their words off
+                    FlowLayout(spacing: 8) {
+                        Button {
+                            Task { await model.runCycle() }
+                        } label: {
+                            Label(t("Scan now"), systemImage: "antenna.radiowaves.left.and.right")
+                        }
+                        .disabled(model.cycleRunning || s.running || model.sampleData)
+                        Button {
+                            Task { await model.backupIfNeeded(force: true) }
+                        } label: {
+                            Label(t("Back up now"), systemImage: "externaldrive.badge.plus")
+                        }
+                        .disabled(model.sampleData)
+                        Button {
+                            model.revealBackups()
+                        } label: {
+                            Label(t("Backups"), systemImage: "folder")
+                        }
                     }
                     .buttonStyle(.glass).plainGlass()
                 }
@@ -128,31 +142,6 @@ struct StatsView: View {
         GridRow {
             Text(name).foregroundStyle(.secondary)
             Text(value).textSelection(.enabled)
-        }
-    }
-
-    private func engineButtons(_ s: ServerSummary) -> some View {
-        HStack {
-            Button {
-                Task { await model.runCycle() }
-            } label: {
-                Label(t("Scan now"), systemImage: "antenna.radiowaves.left.and.right")
-            }
-            .disabled(model.cycleRunning || s.running || model.sampleData)
-            .help(t("Scan now"))
-            Button {
-                Task { await model.backupIfNeeded(force: true) }
-            } label: {
-                Label(t("Back up now"), systemImage: "externaldrive.badge.plus")
-            }
-            .disabled(model.sampleData)
-            .help(t("Back up now"))
-            Button {
-                model.revealBackups()
-            } label: {
-                Label(t("Backups"), systemImage: "folder")
-            }
-            .help(t("Backups"))
         }
     }
 }
