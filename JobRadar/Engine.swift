@@ -215,7 +215,7 @@ enum EngineRuntime {
         return wheels.sorted { $0.lastPathComponent < $1.lastPathComponent }.last
     }
 
-    /// Version of the engine inside this app ("1.0.0" from "jobradar-1.0.0-py3-none-any.whl").
+    /// Version of the engine inside this app ("1.1.0" from "jobradar-1.1.0-py3-none-any.whl").
     static var bundledVersion: String {
         let parts = bundledWheel?.lastPathComponent.split(separator: "-") ?? []
         return parts.count > 1 ? String(parts[1]) : ""

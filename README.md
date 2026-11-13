@@ -3,7 +3,7 @@
 JobRadar is a Mac app that looks for jobs for you, judges every posting against your real CV, and writes
 honest application documents for the ones you choose. It runs on your Mac, with the AI model you connect.
 
-**Download:** [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg) (macOS 26 or later)
+**Download:** [JobRadar-1.1.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.1.dmg) (macOS 26 or later)
 
 Türkçe: [README.tr.md](README.tr.md)
 
@@ -45,7 +45,7 @@ Türkçe: [README.tr.md](README.tr.md)
 
 ## Installing
 
-1. Download [JobRadar-1.0.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.0.dmg), open it and drag JobRadar into Applications.
+1. Download [JobRadar-1.1.dmg](https://github.com/Berkslny/JobRadar/raw/main/downloads/JobRadar-1.1.dmg), open it and drag JobRadar into Applications.
 2. Open JobRadar. The download is not notarised by Apple, so the first time macOS refuses to open it.
    Close that message, open **System Settings > Privacy & Security**, scroll down to the line about
    JobRadar, choose **Open Anyway** and confirm. This is needed once.
@@ -53,6 +53,11 @@ Türkçe: [README.tr.md](README.tr.md)
    check what was read), and what to search for. Then start the first scan.
 
 The app stays in the menu bar while it is open and scans at 08:00, 13:00 and 19:00.
+
+**Updating from an earlier version.** Quit JobRadar (the button in its menu bar window), download the new
+disk image and drag JobRadar into Applications again, replacing the old copy. Your data stays where it is.
+On its first start the new version brings its engine up to date, and macOS asks once more for
+**Open Anyway**, because every download is a new app to it.
 
 ## Where your data lives
 
@@ -108,7 +113,7 @@ JOBRADAR_NOTARY_PROFILE=jobradar-notary scripts/make-dmg.command
 | Path | What |
 |---|---|
 | `JobRadar/` | The Mac app (SwiftUI). `L10nTurkish.swift` is generated from `tools/tr_table.py`. |
-| `JobRadar/jobradar-1.0.0-py3-none-any.whl` | The engine as the app carries it. |
+| `JobRadar/jobradar-1.1.0-py3-none-any.whl` | The engine as the app carries it. |
 | `engine/` | The engine's source (Python): sources, scoring, tailoring, the local API. |
 | `scripts/` | `make-dmg.command`, `build-engine.command`. |
 | `downloads/` | The disk image of the current version. |
@@ -122,6 +127,12 @@ After changing interface texts: add the Turkish text to `tools/tr_table.py` and 
 
 The engine can also run without the app (`jobradar serve`, `jobradar run`); its command line and its
 optional web panel are in Turkish for now.
+
+## Versions
+
+- **1.1**: smart matching (Settings > Matching, off until you turn it on) and measurements on your own
+  verdicts (status page).
+- **1.0**: the first release.
 
 ## Fair use of job boards
 
