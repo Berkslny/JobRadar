@@ -44,6 +44,12 @@ struct MatchingSettings: View {
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
+            // a problem is said first: what follows may be missing because of it
+            if !error.isEmpty {
+                Section {
+                    Banner(kind: .error, text: error)
+                }
+            }
             if let state {
                 Section(t("Smart matching")) {
                     Toggle(t("Use smart matching"), isOn: enabledBinding(state))
@@ -122,11 +128,6 @@ struct MatchingSettings: View {
                     }
                 }
             }
-            if !error.isEmpty {
-                Section {
-                    Banner(kind: .error, text: error)
-                }
-            }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
@@ -178,8 +179,10 @@ struct MatchingSettings: View {
         baseURL = fresh.baseUrl
     }
 
+    /// What the engine in use says. When it cannot say, nothing of another engine or an earlier moment stays on screen.
     private func load() async {
         guard model.connectionReady else {
+            state = nil
             error = t("The engine is not running yet.")
             return
         }
@@ -187,8 +190,10 @@ struct MatchingSettings: View {
             show(try await model.api.matching())
             error = ""
         } catch let problem as APIError where problem.status == 404 {
+            state = nil
             error = t("This engine is older than the app and has no smart matching yet.")
         } catch {
+            state = nil
             self.error = error.localizedDescription
         }
     }

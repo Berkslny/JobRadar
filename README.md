@@ -57,7 +57,10 @@ The app stays in the menu bar while it is open and scans at 08:00, 13:00 and 19:
 **Updating from an earlier version.** Quit JobRadar (the button in its menu bar window), download the new
 disk image and drag JobRadar into Applications again, replacing the old copy. Your data stays where it is.
 On its first start the new version brings its engine up to date, and macOS asks once more for
-**Open Anyway**, because every download is a new app to it.
+**Open Anyway**, because every download is a new app to it. For the same reason, when JobRadar keeps a
+secret for you (an API key, the e-mail app password, the key of your server), macOS asks for your login
+password before the new copy may read it. Choose **Always Allow**; it asks once per secret, and JobRadar
+goes on after you answered.
 
 ## Where your data lives
 

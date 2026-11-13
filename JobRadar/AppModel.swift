@@ -247,6 +247,7 @@ final class AppModel {
         selectedJobID = nil
         summary = nil
         stats = nil
+        bench = nil
         setup = nil
         sidebar = .jobs("inbox")
         await restartLocal()
@@ -913,6 +914,7 @@ final class AppModel {
         detail = nil
         selectedJobID = nil
         summary = nil
+        bench = nil       // measurements of the engine used until now
         setup = nil
         if config.mode == .local {
             if !wasSample && previous.mode == .local && previous.localFolder == config.localFolder
