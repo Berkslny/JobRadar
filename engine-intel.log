@@ -1,0 +1,2 @@
+Panel: http://127.0.0.1:8790  (durdurmak için Ctrl+C)
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.

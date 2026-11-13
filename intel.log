@@ -1,0 +1,47 @@
+disk image under test: JobRadar-1.1.dmg sha256 8233e659482a6df571720775a6222f64588bda5927af44331dee49ef72fcbf58
+
+=== tools and display (02:28:37) ===
+set 1920x1080: ok
+current 1920x1080 pixels 1920x1080
+
+=== Rosetta (02:29:01) ===
+x86_64 programs run here
+Apple M1 (Virtual)
+avx2 for x86_64 programs: 0
+
+=== install from the disk image and start the Intel half (02:29:02) ===
+hdiutil: WARNING: 'hdiutil attach -nobrowse -readonly ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --readOnly ...' instead.
+installed 1.1 from JobRadar-1.1.dmg
+signature valid
+engine listening after about 42 s
+[ NULL ]  ASN:0x0-0x36036: (in front) 
+    bundleID=[ NULL ] 
+Mach-O 64-bit executable x86_64
+Mach-O 64-bit executable x86_64
+engine 1.1.0 on x86_64 3.12.16
+job boards added
+engine stopped
+
+=== made-up workspace (02:30:08) ===
+seed: found 57, new 57, merged 0, filtered 21
+labels: {'total': 43, 'explicit': 37, 'from_status': 6, 'good': 18, 'maybe': 9, 'bad': 16, 'needed': 30, 'enough': True}
+
+=== smart matching in the Intel half (02:33:13) ===
+engine listening after about 16 s
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,161 1080x732)
+shot 01-intel-inbox
+pressed
+found after 48 s: yes: The model works: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 answered in 42.5 seconds.
+shot 02-intel-matching-on
+onnxruntime 1.23.2 fastembed 0.9.1 x86_64
+revealed: Compare my jobs now
+pressed
+found after 34 s: yes: 58 jobs compared, 3 let through.
+shot 03-intel-matching-compared
+matching-intel.json: 970 bytes
+scored 58 promoted 3 threshold 0.5372 last error: -
+clicked at 510,600
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (420,161 1080x732)
+shot 04-intel-status
+engine stopped
+intel walk finished
