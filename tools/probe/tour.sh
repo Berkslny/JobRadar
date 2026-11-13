@@ -188,7 +188,11 @@ posting() {  # posting full|look
   local line id
   line=$(promoted_job)
   id="${line%%$'\t'*}"
-  [ -n "$id" ] || { echo "NO PROMOTED POSTING"; return 1; }
+  if [ -z "$id" ]; then
+    echo "NO PROMOTED POSTING; opening the first posting of the list instead"
+    id=$(python3 -c "import json, sys; print(json.load(open(sys.argv[1]))['jobs'][0]['id'])" "$OUT/jobs-all-$LANG_NOW.json")
+    line="$id"
+  fi
   echo "opening $line"
   open "jobradar://job/$id"
   sleep 5
@@ -295,6 +299,10 @@ wait_text "$(Lpart "%@ jobs compared, %@ let through." 2)" 420 || ax texts | tai
 page_shots en-matching-compared "$(L "Matching")"
 ax texts > "$OUT/texts-en-matching.txt"
 api "matching" matching-after.json
+sqlite3 -separator ' | ' "$SUPPORT/workspace/data/jobradar.db" \
+  "select printf('%.3f', m.semantic), printf('%.3f', m.track_sim), printf('%.3f', m.profile_sim), m.best_track, m.promoted, j.status, cast(j.prescore as int), coalesce(l.label, '-'), j.title, coalesce(j.filtered_reason, '') from job_match m join jobs j on j.id = m.job_id left join labels l on l.job_id = j.id order by m.semantic desc" \
+  > "$OUT/semantic-scores.txt"
+wc -l < "$OUT/semantic-scores.txt"
 key 'keystroke "w" using command down'
 sleep 2
 
