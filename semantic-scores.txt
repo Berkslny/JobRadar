@@ -1,0 +1,56 @@
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 92 | 1 | Computer Vision Engineer (m/f/d) Embedded | 
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 88 | 1 | Drone Systems Engineer (m/f/d) | 
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 94 | 1 | Hardware Engineer PCB Design (m/f/d) | 
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 92 | 2 | FPGA Engineer (m/f/d) Image Processing | 
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 88 | 2 | Digital Design Engineer (FPGA/ASIC) | 
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 88 | 2 | Junior FPGA Developer – Radar Signal Processing | 
+0.724 | 0.698 | 0.774 | fpga | 0 | new | 88 | 2 | Electronics Engineer UAV Payloads (m/f/d) | 
+0.702 | 0.677 | 0.749 | fpga | 0 | applied | 63 | - | FPGA-Entwickler (m/w/d) Bildverarbeitung | 
+0.699 | 0.664 | 0.765 | fpga | 0 | new | 84 | 1 | Ingenieur Signalverarbeitung (m/w/d) Sonar | 
+0.699 | 0.664 | 0.765 | fpga | 0 | new | 82 | 2 | VHDL Entwickler (m/w/d) Flugsysteme | 
+0.699 | 0.664 | 0.765 | fpga | 0 | new | 87 | 2 | Werkstudent (m/w/d) FPGA Verifikation | 
+0.699 | 0.664 | 0.765 | fpga | 0 | new | 91 | 2 | Embedded Hardware Engineer (m/w/d) Avionik | 
+0.699 | 0.664 | 0.765 | fpga | 0 | new | 84 | 1 | Hardwareentwickler (m/w/d) Sensorik | 
+0.661 | 0.659 | 0.665 | energy | 0 | new | 68 | 1 | Ingenieur Elektrotechnik (m/w/d) Schaltanlagen | 
+0.661 | 0.659 | 0.665 | energy | 0 | new | 68 | 0 | Werkstudent (m/w/d) Energiewirtschaft | 
+0.661 | 0.659 | 0.665 | energy | 0 | new | 68 | 1 | Projektingenieur Photovoltaik (m/w/d) | 
+0.661 | 0.659 | 0.665 | energy | 0 | new | 72 | 2 | Elektroingenieur (m/w/d) Netzplanung Mittelspannung | 
+0.657 | 0.683 | 0.609 | energy | 0 | new | 39 | - | Elektroingenieur (m/w/d) Netzplanung Mittelspannung | 
+0.630 | 0.590 | 0.704 | energy | 0 | tailored | 69 | - | E-Mobility Engineer – Charging Infrastructure (m/f/d) | 
+0.624 | 0.717 | 0.452 | sustainability | 0 | skipped | 51 | - | LCA Engineer (m/w/d) Ökobilanz | 
+0.620 | 0.717 | 0.440 | sustainability | 0 | skipped | 45 | - | Energiemanager (m/w/d) ISO 50001 | 
+0.617 | 0.574 | 0.698 | energy | 0 | new | 83 | 2 | E-Mobility Engineer Charging Infrastructure (m/f/d) | 
+0.617 | 0.573 | 0.698 | energy | 0 | new | 78 | 2 | Energy Analyst (m/f/d) Flexibility Markets | 
+0.617 | 0.573 | 0.698 | energy | 0 | new | 82 | - | Battery Systems Engineer (m/f/d) | 
+0.617 | 0.573 | 0.698 | energy | 0 | new | 75 | - | Smart Grid Engineer (m/f/d) | 
+0.604 | 0.717 | 0.395 | sustainability | 0 | shortlisted | 51 | - | ESG Analyst (m/w/d) | 
+0.604 | 0.717 | 0.395 | sustainability | 0 | shortlisted | 51 | - | Sustainability Manager (m/w/d) Industrie | 
+0.592 | 0.564 | 0.644 | energy | 0 | new | 12 | 0 | Ingenieur Elektrotechnik (m/w/d) Gutachten | 
+0.581 | 0.569 | 0.605 | energy | 0 | filtered | 14 | - | Analyst (m/w/d) Lastgänge und Stromverträge | matches none of your target tracks
+0.577 | 0.564 | 0.602 | energy | 0 | new | 12 | 0 | Elektroingenieur (m/w/d) Netzbetrieb Leitstelle | 
+0.562 | 0.616 | 0.461 | sustainability | 0 | filtered | 6 | - | Ingenieur (m/w/d) Produktbilanzen und Ökodesign | matches none of your target tracks
+0.559 | 0.541 | 0.594 | energy | 0 | filtered | 14 | 2 | Ingenieur (m/w/d) Ladepark-Planung für Lkw-Flotten | matches none of your target tracks
+0.557 | 0.681 | 0.327 | sustainability | 0 | new | 46 | 2 | Sustainability Analyst LCA (w/m/d) | 
+0.532 | 0.529 | 0.538 | energy | 0 | new | 12 | 0 | Elektrotechnik Planer (m/w/d) Gebäudetechnik | 
+0.527 | 0.484 | 0.606 | fpga | 0 | new | 8 | 1 | Hardware Engineer (m/w/d) Bahntechnik Zulassung | 
+0.490 | 0.464 | 0.541 | fpga | 0 | filtered | 18 | 2 | Entwicklungsingenieur Programmierbare Logik (m/w/d) | matches none of your target tracks
+0.485 | 0.455 | 0.541 | fpga | 0 | filtered | 6 | -1 | Systemingenieur (m/w/d) ferngesteuerte Fluggeräte | matches none of your target tracks
+0.471 | 0.579 | 0.269 | sustainability | 0 | new | 12 | - | Nachhaltigkeit Referent (m/w/d) Berichterstattung | 
+0.471 | 0.489 | 0.436 | energy | 0 | new | 12 | 0 | Energiewirtschaft Referent (m/w/d) Regulierung | 
+0.451 | 0.443 | 0.467 | fpga | 0 | filtered | 19 | 2 | Junior Engineer Programmable Logic Devices | matches none of your target tracks
+0.442 | 0.454 | 0.419 | fpga | 0 | new | 41 | 0 | Embedded Software Engineer (m/w/d) Infotainment | 
+0.439 | 0.411 | 0.490 | fpga | 0 | filtered | 23 | 2 | RTL Design Engineer (m/f/d) Video Pipelines | matches none of your target tracks
+0.422 | 0.423 | 0.422 | fpga | 0 | new | 8 | 1 | Radar Systemingenieur (m/w/d) Zulassung | 
+0.420 | 0.411 | 0.439 | fpga | 0 | filtered | 19 | 1 | Logic Design Engineer (m/f/d) High-Speed Interfaces | matches none of your target tracks
+0.406 | 0.406 | 0.406 | fpga | 0 | filtered | 11 | - | Data Engineer (m/f/d) E-Commerce | matches none of your target tracks
+0.395 | 0.394 | 0.398 | fpga | 0 | new | 54 | 0 | Embedded Linux Developer (m/f/d) Payment Terminals | 
+0.394 | 0.399 | 0.387 | energy | 0 | new | 12 | 0 | Energy Trader (m/f/d) Intraday | 
+0.333 | 0.356 | 0.291 | sustainability | 0 | filtered | 14 | 0 | HR Business Partner (m/w/d) | matches none of your target tracks
+0.323 | 0.322 | 0.324 | sustainability | 0 | new | 29 | 0 | Radar Operator Trainer (m/w/d) | 
+0.310 | 0.313 | 0.306 | fpga | 0 | filtered | 0 | 0 | UX Designer (m/f/d) Mobile Banking | matches none of your target tracks
+0.298 | 0.280 | 0.334 | fpga | 0 | filtered | 14 | 0 | Frontend Developer React (m/f/d) | matches none of your target tracks
+0.264 | 0.305 | 0.187 | sustainability | 0 | filtered | 14 | 0 | Koch (m/w/d) Betriebsrestaurant | matches none of your target tracks
+0.251 | 0.287 | 0.185 | sustainability | 0 | new | 11 | - | Zahnmedizinische Fachangestellte (m/w/d) | 
+0.225 | 0.252 | 0.176 | sustainability | 0 | filtered | 18 | 0 | Marketing Manager (m/w/d) Social Media | matches none of your target tracks
+0.176 | 0.164 | 0.200 | sustainability | 0 | filtered | 14 | 0 | Accountant (m/f/d) Accounts Payable | matches none of your target tracks
+0.152 | 0.164 | 0.129 | sustainability | 0 | filtered | 11 | - | Physiotherapeut (m/w/d) | matches none of your target tracks

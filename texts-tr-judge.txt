@@ -1,0 +1,244 @@
+--- Durum ve kaynaklar
+38
+4
+2
+24
+66
+E-posta yanıtları
+Profil
+Arama
+Durum ve kaynaklar
+9 güçlü ilan (≥ 3.5)
+12 ilan değerlendirme bekliyor
+1 başvuruda takip zamanı
+Henüz tarama yapılmadı
+Motor
+Çalıştığı yer
+Bu Mac (uygulama çalıştırıyor)
+Bu Mac (uygulama çalıştırıyor)
+Durum
+Boşta
+Boşta
+Son tarama
+henüz yok
+henüz yok
+Yapay zeka modeli
+yok
+yok
+Değerlendirme bekleyen
+12
+12
+Profil
+Deniz Beispiel
+Deniz Beispiel
+Sürüm
+1.0.0
+1.0.0
+Başvuru hunisi
+Yeni
+36
+Kısa liste
+2
+Belgeler hazır
+1
+Onaylandı
+0
+Başvuruldu
+1
+Mülakat
+0
+Teklif
+0
+Ret
+0
+Kaynaklar
+Kaynak
+İlanlar
+Değerl.
+Güçlü
+Başvuru
+Ort.
+indeed
+17
+12
+7
+0
+3.8
+stepstone
+13
+2
+0
+0
+2.9
+arbeitsagentur
+10
+1
+0
+1
+3.3
+linkedin
+1
+1
+0
+1
+3.3
+greenhouse
+1
+1
+0
+0
+3.8
+freehire
+1
+1
+0
+0
+3.9
+Kaynak sağlığı
+Bütün kaynaklar son taramada sonuç verdi.
+Eksik beceriler
+Puanı 3.0 ve üstü olan 15 ilanda (son 120 gün) en sık eksik ya da kısmen karşılanan şartlar. Örnekleri görmek için becerinin üstüne gel.
+Beceri
+İlanlar
+Eksik
+Kısmen
+Zorunlu
+Simulation
+5
+5
+0
+5
+İngilizce
+4
+4
+0
+4
+Radar
+1
+1
+0
+1
+Almanca (akıcı)
+9
+0
+9
+9
+İngilizce (akıcı)
+9
+0
+9
+9
+Embedded
+7
+0
+7
+7
+Zynq
+7
+0
+7
+7
+Python
+2
+0
+2
+2
+Almanca B1
+1
+0
+1
+1
+Almanca B2
+1
+0
+1
+1
+İngilizce B1
+1
+0
+1
+1
+İngilizce B2
+1
+0
+1
+1
+VHDL
+1
+0
+1
+1
+JobRadar senin ilanlarını ne kadar iyi buluyor
+Kendi kararlarınla ölçülür: kısa listeye aldığın, başvurduğun ya da geçtiğin ilanlar ve burada karar verdiklerin. Karar sayısı arttıkça sayılar oturur.
+46 karar: 20 uygun, 9 belki, 17 uygun değil
+Hangi sıralama istediğin ilanları öne alıyor?
+Sıra
+İlk 10
+İlk 20
+NDCG@10
+AUC
+Ön puan (anahtar kelimeler)
+%100
+%95
+0.86
+0.85
+Anlamsal puan
+%100
+%85
+0.79
+0.86
+İkisi birlikte (yeni sıralama)
+%100
+%95
+0.85
+0.87
+AI puanı (15 ilan)
+%100
+%100
+0.82
+·
+Karar verdiğin 46 ilan üzerinde ölçülür. İlk 10 ve ilk 20: bir sıralamanın en üstündeki ilanların ne kadarını istediğin. NDCG@10 ve AUC: sıralamanın tamamı kararlarına ne kadar uyuyor; 1.0 kusursuz, AUC için 0.5 rastgele demektir. İlk satırlar aynı ilanlar üzerinde ölçülür, bu yüzden birbirleriyle karşılaştırılabilir.
+Yapay zeka modeline neler ulaşıyor, neler hiç ulaşmıyor
+Grup
+İlanlar
+Karar verilen
+İstediğin
+Tahmin
+Yapay zeka modeli değerlendirdi
+17
+13
+13 (%100)
+~17
+Yapay zeka modelini bekliyor
+12
+8
+5 (%63)
+~7.5
+Ön puanı düşük
+11
+8
+2 (%25)
+~2.8
+Hiçbir arama alanına uymuyor
+16
+11
+5 (%45)
+~7.3
+İsteyeceğin yaklaşık 10 ilan yapay zeka modeline hiç ulaşmıyor.
+Tahmin: karar verdiğin ilanlar içinde istediklerinin payı, grubun tamamına uygulanır. Bir gruptan en az 5 ilana karar verince görünür.
+Yapay zeka modeli senin gibi mi karar veriyor?
+İkinizin de karar verdiği 15 ilanda: %60 oranında aynı karar. Sadece yapay zeka modeli evet dedi: 0. Sadece sen evet dedin: 6.
+Şansın ötesinde uyum (kappa): 0.00. 0.6 ve üstü iyidir.
+Değerlendirilen ilanların %100 kadarı istediğin ilanlardı.
+Durum ve kaynaklar
+Bu ilan sana uygun mu?
+40 ilana karar verildi · 11 kaldı
+İlana, onu az önce kendin bulmuşsun gibi karar ver. Puanlar bilerek gizlendi. İlanlar JobRadar'ın topladığı her şeyden seçilir, kuralların elediği ilanlar da dahil; böylece sayılar kuralların neyi kaçırdığını gösterir.
+Werkstudent Embedded Hardware
+Hanse Antriebstechnik GmbH · Hamburg
+Werkstudent
+Almanca B2 (sen B1)
+Yayın: 9 Kas 2026
+Werkstudent (m/w/d) Embedded Hardware ⏎ • Unterstützung bei Schaltplanentwurf und Inbetriebnahme von Leiterplatten ⏎ • Programmierung von Testskripten ⏎ • Gute Deutschkenntnisse ⏎ • 15-20 Stunden pro Woche, Standort Hamburg
+Werkstudent (m/w/d) Embedded Hardware ⏎ • Unterstützung bei Schaltplanentwurf und Inbetriebnahme von Leiterplatten ⏎ • Programmierung von Testskripten ⏎ • Gute Deutschkenntnisse ⏎ • 15-20 Stunden pro Woche, Standort Hamburg
+1, 2 ve 3 tuşları Uygun, Belki ve Uygun değil kararını verir.

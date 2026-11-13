@@ -1,0 +1,193 @@
+
+=== tools and display (01:16:46) ===
+0
+set 1920x1080: ok
+current 1920x1080 pixels 1920x1080
+
+=== build (01:17:05) ===
+** BUILD SUCCEEDED **
+
+
+=== first start: the app installs its engine (01:17:48) ===
+engine listening after about 8 s
+trusted
+job boards added
+engine stopped
+
+=== made-up workspace (01:17:59) ===
+Demo: 10 ilan, 9 kayıt, 1 birleşti, 3 elendi
+Demo klasörü: /Users/runner/Library/Application Support/JobRadar/workspace
+seed: found 57, new 57, merged 0, filtered 21
+labels: {'total': 43, 'explicit': 37, 'from_status': 6, 'good': 18, 'maybe': 9, 'bad': 16, 'needed': 30, 'enough': True}
+group evaluated       total  17 judged 12 wanted 12
+group queue           total  12 judged  7 wanted 5
+group low_score       total  11 judged  7 wanted 1
+group track_filtered  total  16 judged 11 wanted 5
+rankings on 43 postings; estimated missed: 8.8
+accepted  27 postings · status ['new'] · quick score 29 to 94
+low        8 postings · status ['new'] · quick score 8 to 12
+hidden     8 postings · status ['filtered'] · quick score 6 to 24
+
+=== en: start (01:18:10) ===
+engine listening after about 4 s
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (420,200 1080x732)
+shot 01-en-inbox
+bench-before.json: 1236 bytes
+
+=== en: status page (01:18:21) ===
+clicked at 510,639
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (420,200 1080x732)
+found after 0 s: yes: How well JobRadar finds your jobs
+shot 02-en-status-before-0
+shot 03-en-status-before-0.25
+shot 04-en-status-before-0.5
+shot 05-en-status-before-0.75
+shot 06-en-status-before-1
+     223
+resized to 1500x940
+shot 07-en-status-before-wide-0
+shot 08-en-status-before-wide-1
+resized to 1080x732
+
+=== en: judging sheet (01:18:38) ===
+revealed: Judge jobs…
+pressed
+found after 0 s: yes: Does this job fit you?
+shot 09-en-judge-1
+shot 10-en-judge-after-key-1
+pressed
+pressed
+shot 11-en-judge-after-four
+yes: 40 judged · 11 to go
+pressed
+shot 12-en-status-after-judging
+bench-after-judging.json: 1233 bytes
+
+=== en: settings, smart matching off (01:18:54) ===
+AXWindow[AXStandardWindow] "Matching ¦ com_apple_SwiftUI_Settings_window" (610,192 700x728)
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (80,60 1080x732)
+shot 13-en-matching-off-0
+shot 14-en-matching-off-0.25
+shot 15-en-matching-off-0.5
+shot 16-en-matching-off-0.75
+shot 17-en-matching-off-1
+
+=== en: turning smart matching on (01:19:05) ===
+pressed
+shot 18-en-matching-turning-on
+found after 5 s: yes: The model works: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 answered in 6.2 seconds.
+shot 19-en-matching-on-0
+shot 20-en-matching-on-0.25
+shot 21-en-matching-on-0.5
+shot 22-en-matching-on-0.75
+shot 23-en-matching-on-1
+{
+  "job_boards" : true,
+  "job_boards_error" : "",
+  "matching" : true,
+  "matching_error" : "",
+  "uv" : "0.13.7",
+  "wheel" : "4ee71454d413a2262dc239bac410da57ef6cd568b6289178ab72272a52c81624"
+}
+
+=== en: comparing the jobs (01:19:20) ===
+revealed: Compare my jobs now
+pressed
+shot 24-en-matching-comparing
+found after 8 s: yes: 56 jobs compared, 0 let through.
+shot 25-en-matching-compared-0
+shot 26-en-matching-compared-0.25
+shot 27-en-matching-compared-0.5
+shot 28-en-matching-compared-0.75
+shot 29-en-matching-compared-1
+matching-after.json: 884 bytes
+      56
+
+=== en: inbox after matching (01:19:41) ===
+clicked at 129,147
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (80,60 1080x732)
+shot 30-en-inbox-after-matching
+no
+
+=== en: a posting smart matching let through (01:19:48) ===
+promoted postings: 0
+NO PROMOTED POSTING; opening the first posting of the list instead
+opening 146ddd1498f5
+AXWindow[AXStandardWindow] "Inbox – 38 jobs ¦ main-AppWindow-1" (80,60 1080x732)
+yes: Semantic score 72
+shot 31-en-posting
+pressed
+screen en-verdict-menu
+pressed
+yes: Your verdict: Maybe
+shot 33-en-posting-judged
+
+=== en: status page (01:20:02) ===
+clicked at 170,499
+AXWindow[AXStandardWindow] "Status and sources ¦ main-AppWindow-1" (80,60 1080x732)
+found after 0 s: yes: How well JobRadar finds your jobs
+shot 34-en-status-after-0
+shot 35-en-status-after-0.25
+shot 36-en-status-after-0.5
+shot 37-en-status-after-0.75
+shot 38-en-status-after-1
+     233
+resized to 1500x940
+shot 39-en-status-after-wide-0
+shot 40-en-status-after-wide-1
+resized to 1080x732
+bench-after-matching.json: 1542 bytes
+summary-after.json: 1174 bytes
+engine stopped
+
+=== tr: start (01:20:21) ===
+engine listening after about 4 s
+AXWindow[AXStandardWindow] "Gelen kutusu – 38 ilan ¦ main-AppWindow-1" (80,60 1080x732)
+shot 41-tr-inbox
+
+=== tr: status page (01:20:32) ===
+clicked at 172,499
+AXWindow[AXStandardWindow] "Durum ve kaynaklar ¦ main-AppWindow-1" (80,60 1080x732)
+found after 0 s: yes: JobRadar senin ilanlarını ne kadar iyi buluyor
+shot 42-tr-status-0
+shot 43-tr-status-0.25
+shot 44-tr-status-0.5
+shot 45-tr-status-0.75
+shot 46-tr-status-1
+     233
+resized to 1500x940
+shot 47-tr-status-wide-0
+shot 48-tr-status-wide-1
+resized to 1080x732
+
+=== tr: judging sheet (01:20:50) ===
+revealed: İlanlara karar ver…
+pressed
+found after 0 s: yes: Bu ilan sana uygun mu?
+shot 49-tr-judge-1
+pressed
+
+=== tr: settings (01:20:57) ===
+AXWindow[AXStandardWindow] "Eşleştirme ¦ com_apple_SwiftUI_Settings_window" (610,192 700x728)
+AXWindow[AXStandardWindow] "Durum ve kaynaklar ¦ main-AppWindow-1" (80,60 1080x732)
+shot 50-tr-matching-0
+shot 51-tr-matching-0.25
+shot 52-tr-matching-0.5
+shot 53-tr-matching-0.75
+shot 54-tr-matching-1
+
+=== tr: a posting smart matching let through (01:21:11) ===
+promoted postings: 0
+NO PROMOTED POSTING; opening the first posting of the list instead
+opening 146ddd1498f5
+AXWindow[AXStandardWindow] "Gelen kutusu – 38 ilan ¦ main-AppWindow-1" (80,60 1080x732)
+yes: Anlamsal puan 72
+shot 55-tr-posting
+pressed
+screen tr-verdict-menu
+bench-tr.json: 1554 bytes
+
+=== end (01:21:23) ===
+Panel: http://127.0.0.1:8790  (durdurmak için Ctrl+C)
+engine stopped
+tour finished

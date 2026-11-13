@@ -1,0 +1,233 @@
+--- Status and sources
+38
+4
+2
+24
+66
+E-mail replies
+Profile
+Search
+Status and sources
+9 strong matches (≥ 3.5)
+12 waiting for evaluation
+1 applications due for a follow-up
+No scan yet
+Engine
+Runs on
+This Mac (started by the app)
+This Mac (started by the app)
+State
+Idle
+Idle
+Last scan
+none yet
+none yet
+AI model
+none
+none
+Waiting for evaluation
+12
+12
+Profile
+Deniz Beispiel
+Deniz Beispiel
+Version
+1.0.0
+1.0.0
+Application funnel
+New
+36
+Shortlist
+2
+Documents ready
+1
+Approved
+0
+Applied
+1
+Interview
+0
+Offer
+0
+Rejected
+0
+Sources
+Source
+Jobs
+Evaluated
+Strong
+Applied
+Avg.
+indeed
+17
+12
+7
+0
+3.8
+stepstone
+13
+2
+0
+0
+2.9
+arbeitsagentur
+10
+1
+0
+1
+3.3
+linkedin
+1
+1
+0
+1
+3.3
+greenhouse
+1
+1
+0
+0
+3.8
+freehire
+1
+1
+0
+0
+3.9
+Source health
+Every source delivered results in the last run.
+Skill gaps
+The requirements that are most often missing or only partly met in 15 jobs scored 3.0 or higher (last 120 days). Hover over a skill to see examples.
+Skill
+Jobs
+Missing
+Partly
+Required
+Simulation
+5
+5
+0
+5
+English
+4
+4
+0
+4
+Radar
+1
+1
+0
+1
+English (fluent)
+9
+0
+9
+9
+German (fluent)
+9
+0
+9
+9
+Embedded
+7
+0
+7
+7
+Zynq
+7
+0
+7
+7
+Python
+2
+0
+2
+2
+English B1
+1
+0
+1
+1
+English B2
+1
+0
+1
+1
+German B1
+1
+0
+1
+1
+German B2
+1
+0
+1
+1
+VHDL
+1
+0
+1
+1
+How well JobRadar finds your jobs
+Measured on your own verdicts: the jobs you shortlisted, applied to or skipped, and the ones you judged here. The more verdicts, the steadier the numbers.
+43 verdicts: 18 fit, 9 maybe, 16 do not fit
+Which order puts the jobs you want first?
+Order
+First 10
+First 20
+NDCG@10
+AUC
+Quick score (keywords)
+100%
+95%
+0.75
+0.89
+AI score (14 jobs)
+100%
+100%
+0.79
+·
+Measured on the 43 jobs that have a verdict of yours. First 10 and first 20: the share of the jobs at the top of an order that you want. NDCG@10 and AUC: how well the whole order follows your verdicts; 1.0 is perfect, and an AUC of 0.5 is chance. Turn on smart matching in Settings to compare it with the keyword order here.
+What reaches the AI model, and what never does
+Group
+Jobs
+Judged
+You want
+Estimate
+Evaluated by the AI model
+17
+12
+12 (100%)
+~17
+Waiting for the AI model
+12
+7
+5 (71%)
+~8.6
+Quick score too low
+11
+7
+1 (14%)
+~1.6
+Matches none of your tracks
+16
+11
+5 (45%)
+~7.3
+About 8.8 jobs you would want never reach the AI model.
+Estimate: the share you wanted among the jobs you judged, applied to the whole group. It appears once you judged at least 5 jobs of a group.
+Does the AI model judge like you?
+On the 14 jobs that both of you judged: the same verdict on 64%. Only the AI model said yes: 0. Only you said yes: 5.
+Agreement beyond chance (kappa): 0.00. From 0.6 on it is good.
+100% of the evaluated jobs were jobs you want.
+Status and sources
+Does this job fit you?
+37 judged · 15 to go
+Judge the posting as if you had just found it yourself. Scores are hidden on purpose. The jobs are drawn from everything JobRadar collected, including what its rules filtered out, so the numbers show what the rules miss.
+Sustainability Analyst LCA
+GrünKreis Consulting GmbH · Kiel
+German B2 (you: B1)
+Posted Nov 5, 2026
+GrünKreis Consulting supports industrial clients with decarbonisation. ⏎ Aufgaben ⏎ • Erstellung von Ökobilanzen (LCA) nach ISO 14040/44 ⏎ • CO2-Bilanzierung und CSRD-Berichterstattung ⏎ Profil ⏎ • Studium im Bereich Nachhaltigkeit, Umwelt- oder Ingenieurwesen ⏎ • Erfahrung mit openLCA oder SimaPro ⏎ • Gute Deutsch- und Englischkenntnisse
+GrünKreis Consulting supports industrial clients with decarbonisation. ⏎ Aufgaben ⏎ • Erstellung von Ökobilanzen (LCA) nach ISO 14040/44 ⏎ • CO2-Bilanzierung und CSRD-Berichterstattung ⏎ Profil ⏎ • Studium im Bereich Nachhaltigkeit, Umwelt- oder Ingenieurwesen ⏎ • Erfahrung mit openLCA oder SimaPro ⏎ • Gute Deutsch- und Englischkenntnisse
+Keys 1, 2 and 3 choose Fits, Maybe and Does not fit.
