@@ -123,16 +123,45 @@ for i in $(seq 1 30); do
   sleep 1
 done
 curl -s -H "Authorization: Bearer probe-token" http://127.0.0.1:8795/api/v1/summary | python3 -c "import json, sys; d = json.load(sys.stdin); print('old server answers: version', d['version'], 'features', d.get('features'))"
-defaults write $BUNDLE serverMode -string remote
-defaults write $BUNDLE serverURL -string "http://127.0.0.1:8795"
-security add-generic-password -U -A -a apiToken -s $BUNDLE -w probe-token && echo "key stored"
-open -n "$APP"
-sleep 12
-osascript -e 'tell application "JobRadar" to activate' 2>&1
+# the app is told about the server the way a user does it: Settings > Engine and data
+start_app 60
+key 'keystroke "," using command down'
+sleep 4
+ax press AXButton "$(L "Engine and data")" | tail -1
 sleep 2
+ax dump > "$OUT/tree-engine-settings.txt"
+ax press AXRadioButton "$(L "On my own server")" | tail -1
+sleep 2
+ax dump > "$OUT/tree-engine-settings-remote.txt"
+ax click AXTextField "$(L "Address")" | tail -1
+sleep 1
+key 'keystroke "http://127.0.0.1:8795"'
+sleep 1
+ax click AXTextField "$(L "API key")" | tail -1
+sleep 1
+key 'keystroke "probe-token"'
+sleep 1
+shot remote-settings-filled
+ax press AXButton "$(L "Test the connection")" | tail -1
+wait_text "$(Lpart "Connected. Server %@, %@ jobs in the inbox, AI model: %@." 1)" 20 || ax texts | head -40
+shot remote-settings-tested
+ax press AXButton "$(L "Apply changes")" | tail -1
+sleep 6
 ax windows
-shot remote-inbox
+screen remote-applied
 echo "engine of this Mac running: $(pgrep -f 'jobradar serve --no-open --host 127.0.0.1 --port 879[0-4]' | wc -l | tr -d ' ') (0 expected)"
+defaults read $BUNDLE serverMode; defaults read $BUNDLE serverURL
+security find-generic-password -s $BUNDLE -a apiToken >/dev/null 2>&1 && echo "the key is in the keychain"
+ax press AXButton "$(L "Matching")" | tail -1
+sleep 3
+shot remote-matching
+ax has "$(L "This engine is older than the app and has no smart matching yet.")"
+key 'keystroke "w" using command down'
+sleep 2
+sidebar "$(L "Inbox")" ""
+sleep 3
+ax windows | head -1
+shot remote-inbox
 open "jobradar://job/$FIRST"
 sleep 4
 shot remote-posting
@@ -142,14 +171,26 @@ sleep 2
 shot remote-status
 ax has "$(L "Engine status")"
 ax has "$(L "How well JobRadar finds your jobs")" || echo "no measurements with this server (expected)"
-key 'keystroke "," using command down'
-sleep 4
-ax windows | head -1
-shot remote-matching
-ax has "$(L "This engine is older than the app and has no smart matching yet.")"
-key 'keystroke "w" using command down'
-sleep 1
 quit_app
+
+# ------------------------------------------------------------------------------------------------
+section "the same after a restart, and with another build of the app reading the stored key"
+open -n "$APP"
+sleep 12
+ax windows | head -1
+screen remote-restart
+quit_app
+# the 1.0 app is another build: does macOS ask before it may read the key the 1.1 app stored?
+install_from "$OLD"
+open -n "$APP"
+sleep 15
+screen other-build-reads-key
+"$RUNNER_TEMP/winlist" SecurityAgent
+"$RUNNER_TEMP/winlist" JobRadar
+ax windows | head -2
+sample JobRadar 2 -file "$OUT/sample-other-build.txt" >/dev/null 2>&1
+grep -n -m 12 "SecItem\|SecKeychain\|securityd\|Keychain\|mach_msg\|main thread\|Thread_" "$OUT/sample-other-build.txt" | cut -c1-160
+pkill -x JobRadar; sleep 2
 pkill -f "jobradar serve --no-open --host 127.0.0.1 --port 8795" || true
 tail -n 5 "$OUT/engine-old-server.log"
 
